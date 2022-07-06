@@ -1,0 +1,21 @@
+{
+	"name": "tjm/wiki"
+	,"description": "Simple PHP wiki using git for page history"
+	,"authors": [
+		{
+			"name": "Toby Mackenzie"
+			,"email": "public@tobymackenzie.com"
+			,"homepage": "https://www.tobymackenzie.com"
+		}
+	]
+	,"license": "0BSD"
+	,"autoload": {
+		"psr-4": {
+			"TJM\\Wiki\\": "src"
+		}
+	}
+	,"require": {
+		"php": ">=5.4"
+		,"tjm/shell-runner": "@dev"
+	}
+}
