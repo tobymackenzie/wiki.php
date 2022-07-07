@@ -28,6 +28,26 @@ class WikiTest extends TestCase{
 		shell_exec("rm -rf {$wikiDir}/*");
 		rmdir($wikiDir);
 	}
+	public function testGetPage(){
+		$wikiDir = __DIR__ . '/tmp';
+		if(!is_dir($wikiDir)){
+			mkdir($wikiDir);
+		}
+		$wiki = new Wiki($wikiDir);
+		$name = 'foo';
+		$content = "test\n{$name}\n123";
+		$pageDir = $wikiDir . '/' . $name;
+		if(!is_dir($pageDir)){
+			mkdir($pageDir);
+		}
+		$pagePath = $pageDir . '/' . $name . '.md';
+		file_put_contents($pagePath, $content);
+		$page = $wiki->getPage($name);
+		$this->assertEquals($content, $page->getContent());
+
+		shell_exec("rm -rf {$wikiDir}/*");
+		rmdir($wikiDir);
+	}
 	public function testSetPage(){
 		$wikiDir = __DIR__ . '/tmp';
 		if(!is_dir($wikiDir)){

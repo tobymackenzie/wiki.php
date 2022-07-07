@@ -38,6 +38,16 @@ class Wiki{
 		}
 		return false;
 	}
+	public function getPage($name){
+		$dirPath = $this->getPageDirPath($name);
+		//-! maybe use meta to configure file name if different from default
+		$page = new Page($name);
+		$filePath = $this->getPageFilePath($name, $page);
+		if(file_exists($filePath)){
+			$page->setContent(file_get_contents($filePath));
+		}
+		return $page;
+	}
 	public function setPage($name, Page $page){
 		$dirPath = $this->getPageDirPath($name);
 		if(!is_dir($dirPath)){
