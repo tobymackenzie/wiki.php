@@ -1,5 +1,6 @@
 <?php
 namespace TJM\Wiki;
+use DateTime;
 use InvalidArgumentException;
 use TJM\ShellRunner\ShellRunner;
 
@@ -27,11 +28,14 @@ class Wiki{
 	}
 
 	//==pages
-	public function commitPage($name, $message, Page $page = null){
+	public function commitPage($name, $message = null, Page $page = null){
 		if(empty($page) || $this->setPage($name, $page)){
 			$dirPath = $this->getPageDirPath($name);
 			if(!is_dir($dirPath . '/.git')){
 				$this->runShell('git init 2> /dev/null', $dirPath);
+			}
+			if(empty($message)){
+				$message = 'change: ' . (new DateTime())->format('Y-m-d H:i:s');
 			}
 			$this->runShell("git add -A && git commit -m " . escapeshellarg($message), $dirPath);
 			return true;

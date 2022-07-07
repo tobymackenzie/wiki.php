@@ -22,8 +22,8 @@ class WikiTest extends TestCase{
 		chdir($wiki->getPageDirPath($name));
 		$this->assertEquals("Initial commit\n", shell_exec('git log --pretty="%s"'));
 		$page->setContent($content . "\n456");
-		$this->assertTrue($wiki->commitPage($name, "Commit two", $page));
-		$this->assertEquals("Commit two\nInitial commit\n", shell_exec('git log --pretty="%s"'));
+		$this->assertTrue($wiki->commitPage($name, null, $page));
+		$this->assertMatchesRegularExpression("/change: [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
 
 		shell_exec("rm -rf {$wikiDir}/*");
 		rmdir($wikiDir);
