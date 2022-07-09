@@ -84,7 +84,8 @@ class Wiki{
 	}
 	protected function isPagePathSafe($path){
 		$realPath = $this->getRealPath($path);
-		return strpos($realPath, $this->filePath) === 0 && strlen($realPath) > strlen($this->filePath);
+		$wikiRealPath = $this->getRealPath($this->filePath);
+		return strpos($realPath, $wikiRealPath) === 0 && strlen($realPath) > strlen($wikiRealPath);
 	}
 	public function getPageDirPath($name){
 		$path = $this->filePath . '/' . $name;
