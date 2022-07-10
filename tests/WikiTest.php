@@ -46,6 +46,13 @@ class WikiTest extends TestCase{
 		$page = $wiki->getPage($name);
 		$this->assertEquals($content, $page->getContent());
 	}
+	public function testHasPage(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = 'foo';
+		$this->assertFalse($wiki->hasPage($name));
+		$wiki->setPage($name, $wiki->getPage($name));
+		$this->assertTrue($wiki->hasPage($name));
+	}
 	public function testSetPage(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([

@@ -52,6 +52,11 @@ class Wiki{
 		}
 		return $page;
 	}
+	public function hasPage($name){
+		$page = new Page($name);
+		$filePath = $this->getPageFilePath($name, $page);
+		return file_exists($filePath);
+	}
 	public function setPage($name, Page $page){
 		$dirPath = $this->getPageDirPath($name);
 		if(!is_dir($dirPath)){
