@@ -6,13 +6,20 @@ use TJM\Wiki\Page;
 use TJM\Wiki\Wiki;
 
 class WikiTest extends TestCase{
+	const WIKI_DIR = __DIR__ . '/tmp';
+	static public function setUpBeforeClass(): void{
+		mkdir(self::WIKI_DIR);
+	}
+	protected function tearDown(): void{
+		shell_exec("rm -rf " . self::WIKI_DIR . "/*");
+	}
+	static public function tearDownAfterClass(): void{
+		rmdir(self::WIKI_DIR);
+	}
+
 	//==pages
 	public function testCommitPage(){
-		$wikiDir = __DIR__ . '/tmp';
-		if(!is_dir($wikiDir)){
-			mkdir($wikiDir);
-		}
-		$wiki = new Wiki($wikiDir);
+		$wiki = new Wiki(self::WIKI_DIR);
 		$name = 'foo';
 		$content = "test\n{$name}\n123";
 		$page = new Page($name);
@@ -25,18 +32,12 @@ class WikiTest extends TestCase{
 		$this->assertTrue($wiki->commitPage($name, null, $page));
 		$this->assertMatchesRegularExpression("/change: [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
 
-		shell_exec("rm -rf {$wikiDir}/*");
-		rmdir($wikiDir);
 	}
 	public function testGetPage(){
-		$wikiDir = __DIR__ . '/tmp';
-		if(!is_dir($wikiDir)){
-			mkdir($wikiDir);
-		}
-		$wiki = new Wiki($wikiDir);
+		$wiki = new Wiki(self::WIKI_DIR);
 		$name = 'foo';
 		$content = "test\n{$name}\n123";
-		$pageDir = $wikiDir . '/' . $name;
+		$pageDir = self::WIKI_DIR . '/' . $name;
 		if(!is_dir($pageDir)){
 			mkdir($pageDir);
 		}
@@ -44,16 +45,9 @@ class WikiTest extends TestCase{
 		file_put_contents($pagePath, $content);
 		$page = $wiki->getPage($name);
 		$this->assertEquals($content, $page->getContent());
-
-		shell_exec("rm -rf {$wikiDir}/*");
-		rmdir($wikiDir);
 	}
 	public function testSetPage(){
-		$wikiDir = __DIR__ . '/tmp';
-		if(!is_dir($wikiDir)){
-			mkdir($wikiDir);
-		}
-		$wiki = new Wiki($wikiDir);
+		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([
 			'foo',
 			'bar',
@@ -64,18 +58,15 @@ class WikiTest extends TestCase{
 			$page = new Page($name);
 			$page->setContent($content);
 			$this->assertTrue($wiki->setPage($name, $page), "Page {$name} should be created.");
-			$this->assertEquals("{$name}.md\n", shell_exec("ls {$wikiDir}/{$name}"));
-			$this->assertEquals(file_get_contents("{$wikiDir}/{$name}/{$name}.md"), $content);
+			$this->assertEquals("{$name}.md\n", shell_exec("ls " . self::WIKI_DIR . "/{$name}"));
+			$this->assertEquals(file_get_contents(self::WIKI_DIR . "/{$name}/{$name}.md"), $content);
 		}
-		shell_exec("rm -r {$wikiDir}/*");
-		rmdir($wikiDir);
 	}
 
 
 	//==paths
 	public function testGetPageDirPath(){
-		$wikiDir = '/tmp';
-		$wiki = new Wiki($wikiDir);
+		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([
 			'foo',
 			'bar',
@@ -83,12 +74,11 @@ class WikiTest extends TestCase{
 			'foo-bar',
 			'foo.bar',
 		] as $name){
-			$this->assertEquals('/tmp/' . $name, $wiki->getPageDirPath($name));
+			$this->assertEquals(self::WIKI_DIR . '/' . $name, $wiki->getPageDirPath($name));
 		}
 	}
 	public function testInvalidGetPageDirPath(){
-		$wikiDir = '/tmp';
-		$wiki = new Wiki($wikiDir);
+		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([
 			'../foo',
 			'./foo-bar/../../../foo/bar',
@@ -100,8 +90,7 @@ class WikiTest extends TestCase{
 		}
 	}
 	public function testGetPageFilePath(){
-		$wikiDir = '/tmp';
-		$wiki = new Wiki($wikiDir);
+		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([
 			'foo',
 			'bar',
@@ -109,7 +98,7 @@ class WikiTest extends TestCase{
 			'foo.bar',
 		] as $name){
 			$page = new Page($name);
-			$this->assertEquals("/tmp/{$name}/{$name}.md", $wiki->getPageFilePath($name, $page));
+			$this->assertEquals(self::WIKI_DIR . "/{$name}/{$name}.md", $wiki->getPageFilePath($name, $page));
 		}
 	}
 
