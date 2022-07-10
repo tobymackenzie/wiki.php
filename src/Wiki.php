@@ -55,7 +55,7 @@ class Wiki{
 	public function setPage($name, Page $page){
 		$dirPath = $this->getPageDirPath($name);
 		if(!is_dir($dirPath)){
-			$this->runShell('mkdir ' . $dirPath);
+			$this->run('mkdir {{dir}}', $name);
 		}
 		$filePath = $this->getPageFilePath($name, $page);
 		if(!file_exists($filePath) || file_get_contents($filePath) !== $page->getContent()){
@@ -101,10 +101,34 @@ class Wiki{
 	}
 
 	//==shell
+	protected function parseCommandString($command, $name, Page $item = null){
+		$dirPath = $this->getPageDirPath($name);
+		$command = str_replace('{{dir}}', $dirPath, $command);
+		if($item){
+			$fileName = ($item->getFileName() ?: $name) . '.' . $item->getFileExtension();
+			$command = str_replace('{{fileName}}', $fileName, $command);
+			$command = str_replace('{{path}}', $dirPath . '/' . $fileName, $command);
+		}
+		return $command;
+	}
+	public function run($commandOpts, $name, Page $item = null, $location = null){
+		if(is_array($commandOpts)){
+			if(is_array($commandOpts['command'])){
+				foreach($commandOpts['command'] as $key=> $command){
+					$commandOpts['command'][$key] = $this->parseCommandString($command, $name, $item);
+				}
+			}else{
+				$commandOpts['command'] = $this->parseCommandString($commandOpts['command'], $name, $item);
+			}
+		}else{
+			$commandOpts = $this->parseCommandString($commandOpts, $name, $item);
+		}
+		return $this->runShell($commandOpts, $location);
+	}
 	protected function runShell($command, $path = null){
 		if(empty($this->shell)){
 			$this->shell = new ShellRunner();
 		}
-		$this->shell->run($command, $path);
+		return $this->shell->run($command, $path);
 	}
 }

@@ -102,6 +102,20 @@ class WikiTest extends TestCase{
 		}
 	}
 
+	//==shell
+	public function testRun(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = 'foo';
+		$page = new Page($name);
+		$page->setContent('test');
+		$wiki->setPage($name, $page);
+		$this->assertEquals('test', $wiki->run('cat {{path}}', $name, $page));
+		$wiki->run('echo "bar" >> {{path}}', $name, $page);
+		$this->assertEquals("testbar", $wiki->run(array('command'=> 'cat {{path}}'), $name, $page));
+		$this->assertEquals('foo.md', $wiki->run('ls {{dir}}', $name));
+		$this->assertEquals('foo.md', $wiki->run('ls', $name, null, $wiki->getPageDirPath($name)));
+	}
+
 	/*=====
 	==assert
 	=====*/
