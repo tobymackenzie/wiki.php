@@ -6,7 +6,7 @@ use InvalidArgumentException;
 use TJM\ShellRunner\ShellRunner;
 
 class Wiki{
-	protected $filePath;
+	protected $path;
 	protected $mediaDir = '_media';
 	protected $shell;
 
@@ -14,7 +14,7 @@ class Wiki{
 		if($opts){
 			if(!is_array($opts)){
 				$opts = [
-					'filePath'=> $opts,
+					'path'=> $opts,
 				];
 			}
 			foreach($opts as $opt=> $value){
@@ -26,8 +26,8 @@ class Wiki{
 				}
 			}
 		}
-		if(empty($this->filePath)){
-			throw new Exception('Must set filePath value for ' . self::class . ' instance');
+		if(empty($this->path)){
+			throw new Exception('Must set path value for ' . self::class . ' instance');
 		}
 	}
 
@@ -93,11 +93,11 @@ class Wiki{
 	}
 	protected function isPagePathSafe($path){
 		$realPath = $this->getRealPath($path);
-		$wikiRealPath = $this->getRealPath($this->filePath);
+		$wikiRealPath = $this->getRealPath($this->path);
 		return strpos($realPath, $wikiRealPath) === 0 && strlen($realPath) > strlen($wikiRealPath);
 	}
 	public function getPageDirPath($name){
-		$path = $this->filePath . '/' . $name;
+		$path = $this->path . '/' . $name;
 		if(!$this->isPagePathSafe($path)){
 			throw new InvalidArgumentException("Page name {$name} invalid.");
 		}
@@ -135,8 +135,8 @@ class Wiki{
 		return $this->runShell($commandOpts, $location);
 	}
 	public function runGit($command, $opts = []){
-		if(!is_dir($this->filePath . '/.git')){
-			$this->runShell('git init 2> /dev/null', $this->filePath);
+		if(!is_dir($this->path . '/.git')){
+			$this->runShell('git init 2> /dev/null', $this->path);
 		}
 		if(is_string($command)){
 			$opts['command'] = 'git ' . $command;
@@ -146,7 +146,7 @@ class Wiki{
 			}
 			$opts['command'] = $command;
 		}
-		return $this->runShell($opts, $this->filePath);
+		return $this->runShell($opts, $this->path);
 	}
 	protected function runShell($command, $path = null){
 		if(empty($this->shell)){
