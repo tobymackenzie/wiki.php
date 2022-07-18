@@ -40,7 +40,7 @@ class Wiki{
 	public function commit($message = null){
 		$this->gitInit();
 		if(empty($message)){
-			$message = 'change: ' . (new DateTime())->format('Y-m-d H:i:s');
+			$message = 'content: ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
 		return $this->runShell("git commit -m " . escapeshellarg($message), $this->filePath);
 	}
@@ -48,7 +48,7 @@ class Wiki{
 		$this->setPage($name, $page);
 		$this->gitInit();
 		if(empty($message)){
-			$message = 'change(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
+			$message = 'content(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
 		$this->runShell("git add " . escapeshellarg($this->getPageFilePath($name, $page)), $this->filePath);
 		return $this->commit($message);

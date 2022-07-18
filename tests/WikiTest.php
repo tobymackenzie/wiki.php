@@ -35,7 +35,7 @@ class WikiTest extends TestCase{
 		$this->assertEquals("Initial commit\n", shell_exec('git log --pretty="%s"'));
 		$page->setContent($content . "\n456");
 		$this->assertTrue((bool) $wiki->commitPage($name, $page), "Commiting page again should not fail");
-		$this->assertMatchesRegularExpression("/change\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
+		$this->assertMatchesRegularExpression("/content\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
 
 	}
 	public function testGetPage(){
