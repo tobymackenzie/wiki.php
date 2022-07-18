@@ -32,25 +32,18 @@ class Wiki{
 	}
 
 	//==pages
-	protected function gitInit(){
-		if(!is_dir($this->filePath . '/.git')){
-			$this->runShell('git init 2> /dev/null', $this->filePath);
-		}
-	}
 	public function commit($message = null){
-		$this->gitInit();
 		if(empty($message)){
 			$message = 'content: ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
-		return $this->runShell("git commit -m " . escapeshellarg($message), $this->filePath);
+		return $this->runGit("commit -m " . escapeshellarg($message));
 	}
 	public function commitPage($name, Page $page, $message = null){
 		$this->setPage($name, $page);
-		$this->gitInit();
 		if(empty($message)){
 			$message = 'content(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
-		$this->runShell("git add " . escapeshellarg($this->getPageFilePath($name, $page)), $this->filePath);
+		$this->runGit("add " . escapeshellarg($this->getPageFilePath($name, $page)));
 		return $this->commit($message);
 	}
 	public function getPage($name){
@@ -140,6 +133,20 @@ class Wiki{
 			$commandOpts = $this->parseCommandString($commandOpts, $name, $item);
 		}
 		return $this->runShell($commandOpts, $location);
+	}
+	public function runGit($command, $opts = []){
+		if(!is_dir($this->filePath . '/.git')){
+			$this->runShell('git init 2> /dev/null', $this->filePath);
+		}
+		if(is_string($command)){
+			$opts['command'] = 'git ' . $command;
+		}else{
+			foreach($command as $key=> $value){
+				$command[$key] = 'git ' . $value;
+			}
+			$opts['command'] = $command;
+		}
+		return $this->runShell($opts, $this->filePath);
 	}
 	protected function runShell($command, $path = null){
 		if(empty($this->shell)){
