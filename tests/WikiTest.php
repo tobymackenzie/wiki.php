@@ -17,6 +17,12 @@ class WikiTest extends TestCase{
 		rmdir(self::WIKI_DIR);
 	}
 
+	public function testInvalidInstantiate(){
+		$this->assertException(Exception::class, function(){
+			$wiki = new Wiki();
+		}, "Expected exception when instantiating Wiki without path");
+	}
+
 	//==pages
 	public function testCommitPage(){
 		$wiki = new Wiki(self::WIKI_DIR);

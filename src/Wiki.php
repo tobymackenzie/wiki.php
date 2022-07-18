@@ -1,6 +1,7 @@
 <?php
 namespace TJM\Wiki;
 use DateTime;
+use Exception;
 use InvalidArgumentException;
 use TJM\ShellRunner\ShellRunner;
 
@@ -24,6 +25,9 @@ class Wiki{
 					$this->$opt = $value;
 				}
 			}
+		}
+		if(empty($this->filePath)){
+			throw new Exception('Must set filePath value for ' . self::class . ' instance');
 		}
 	}
 
