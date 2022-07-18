@@ -30,11 +30,11 @@ class WikiTest extends TestCase{
 		$content = "test\n{$name}\n123";
 		$page = new Page($name);
 		$page->setContent($content);
-		$this->assertTrue($wiki->commitPage($name, $page, "Initial commit"), "First commit should work");
+		$this->assertTrue((bool) $wiki->commitPage($name, $page, "Initial commit"), "Commiting page should not fail");
 		chdir($wiki->getPageDirPath($name));
 		$this->assertEquals("Initial commit\n", shell_exec('git log --pretty="%s"'));
 		$page->setContent($content . "\n456");
-		$this->assertTrue($wiki->commitPage($name, $page), "Second commit should work");
+		$this->assertTrue((bool) $wiki->commitPage($name, $page), "Commiting page again should not fail");
 		$this->assertMatchesRegularExpression("/change\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
 
 	}

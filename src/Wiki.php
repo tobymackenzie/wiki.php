@@ -45,16 +45,13 @@ class Wiki{
 		return $this->runShell("git commit -m " . escapeshellarg($message), $this->filePath);
 	}
 	public function commitPage($name, Page $page, $message = null){
-		if($this->setPage($name, $page)){
-			$this->gitInit();
-			if(empty($message)){
-				$message = 'change(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
-			}
-			$this->runShell("git add " . escapeshellarg($this->getPageFilePath($name, $page)), $this->filePath);
-			$this->commit($message);
-			return true;
+		$this->setPage($name, $page);
+		$this->gitInit();
+		if(empty($message)){
+			$message = 'change(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
-		return false;
+		$this->runShell("git add " . escapeshellarg($this->getPageFilePath($name, $page)), $this->filePath);
+		return $this->commit($message);
 	}
 	public function getPage($name){
 		$dirPath = $this->getPageDirPath($name);
