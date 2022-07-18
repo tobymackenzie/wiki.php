@@ -11,7 +11,7 @@ class WikiTest extends TestCase{
 		mkdir(self::WIKI_DIR);
 	}
 	protected function tearDown(): void{
-		shell_exec("rm -rf " . self::WIKI_DIR . "/*");
+		shell_exec("rm -rf " . self::WIKI_DIR . "/.git && rm -rf " . self::WIKI_DIR . "/*");
 	}
 	static public function tearDownAfterClass(): void{
 		rmdir(self::WIKI_DIR);
@@ -30,13 +30,12 @@ class WikiTest extends TestCase{
 		$content = "test\n{$name}\n123";
 		$page = new Page($name);
 		$page->setContent($content);
-		$this->assertTrue($wiki->setPage($name, $page), "Page {$name} should be created.");
-		$this->assertTrue($wiki->commitPage($name, "Initial commit"));
+		$this->assertTrue($wiki->commitPage($name, $page, "Initial commit"), "First commit should work");
 		chdir($wiki->getPageDirPath($name));
 		$this->assertEquals("Initial commit\n", shell_exec('git log --pretty="%s"'));
 		$page->setContent($content . "\n456");
-		$this->assertTrue($wiki->commitPage($name, null, $page));
-		$this->assertMatchesRegularExpression("/change: [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
+		$this->assertTrue($wiki->commitPage($name, $page), "Second commit should work");
+		$this->assertMatchesRegularExpression("/change\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
 
 	}
 	public function testGetPage(){

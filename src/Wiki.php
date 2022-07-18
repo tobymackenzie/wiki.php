@@ -32,16 +32,26 @@ class Wiki{
 	}
 
 	//==pages
-	public function commitPage($name, $message = null, Page $page = null){
-		if(empty($page) || $this->setPage($name, $page)){
-			$dirPath = $this->getPageDirPath($name);
-			if(!is_dir($dirPath . '/.git')){
-				$this->runShell('git init 2> /dev/null', $dirPath);
-			}
+	protected function gitInit(){
+		if(!is_dir($this->filePath . '/.git')){
+			$this->runShell('git init 2> /dev/null', $this->filePath);
+		}
+	}
+	public function commit($message = null){
+		$this->gitInit();
+		if(empty($message)){
+			$message = 'change: ' . (new DateTime())->format('Y-m-d H:i:s');
+		}
+		return $this->runShell("git commit -m " . escapeshellarg($message), $this->filePath);
+	}
+	public function commitPage($name, Page $page, $message = null){
+		if($this->setPage($name, $page)){
+			$this->gitInit();
 			if(empty($message)){
-				$message = 'change: ' . (new DateTime())->format('Y-m-d H:i:s');
+				$message = 'change(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 			}
-			$this->runShell("git add -A && git commit -m " . escapeshellarg($message), $dirPath);
+			$this->runShell("git add " . escapeshellarg($this->getPageFilePath($name, $page)), $this->filePath);
+			$this->commit($message);
 			return true;
 		}
 		return false;
