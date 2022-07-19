@@ -28,7 +28,7 @@ class WikiTest extends TestCase{
 		$wiki = new Wiki(self::WIKI_DIR);
 		$name = 'foo';
 		$content = "test\n{$name}\n123";
-		$page = new Page($name);
+		$page = new Page();
 		$page->setContent($content);
 		$this->assertTrue((bool) $wiki->commitPage($name, $page, "Initial commit"), "Commiting page should not fail");
 		chdir($wiki->getPageDirPath($name));
@@ -67,7 +67,7 @@ class WikiTest extends TestCase{
 			'foo.bar',
 		] as $name){
 			$content = "test\n{$name}\n123";
-			$page = new Page($name);
+			$page = new Page();
 			$page->setContent($content);
 			$this->assertTrue($wiki->setPage($name, $page), "Page {$name} should be created.");
 			$this->assertEquals("{$name}.md\n", shell_exec("ls " . self::WIKI_DIR . "/{$name}"));
@@ -109,7 +109,7 @@ class WikiTest extends TestCase{
 			'foo-bar',
 			'foo.bar',
 		] as $name){
-			$page = new Page($name);
+			$page = new Page();
 			$this->assertEquals(self::WIKI_DIR . "/{$name}/{$name}.md", $wiki->getPageFilePath($name, $page));
 		}
 	}
@@ -118,7 +118,7 @@ class WikiTest extends TestCase{
 	public function testRun(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		$name = 'foo';
-		$page = new Page($name);
+		$page = new Page();
 		$page->setContent('test');
 		$wiki->setPage($name, $page);
 		$this->assertEquals('test', $wiki->run('cat {{path}}', $name, $page));

@@ -6,8 +6,9 @@ use InvalidArgumentException;
 use TJM\ShellRunner\ShellRunner;
 
 class Wiki{
-	protected $path;
+	protected $defaultExtension = 'md';
 	protected $mediaDir = '_media';
+	protected $path;
 	protected $shell;
 
 	public function __construct($opts = []){
@@ -31,13 +32,15 @@ class Wiki{
 		}
 	}
 
-	//==pages
+	//==files
 	public function commit($message = null){
 		if(empty($message)){
 			$message = 'content: ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
 		return $this->runGit("commit -m " . escapeshellarg($message));
 	}
+
+	//==pages
 	public function commitPage($name, Page $page, $message = null){
 		$this->setPage($name, $page);
 		if(empty($message)){
@@ -49,22 +52,20 @@ class Wiki{
 	public function getPage($name){
 		$dirPath = $this->getPageDirPath($name);
 		//-! maybe use meta to configure file name if different from default
-		$page = new Page($name);
-		$filePath = $this->getPageFilePath($name, $page);
+		$filePath = $this->getPageFilePath($name);
+		$page = new Page($this->getRelativeFilePath($filePath));
 		if(file_exists($filePath)){
 			$page->setContent(file_get_contents($filePath));
 		}
 		return $page;
 	}
 	public function hasPage($name){
-		$page = new Page($name);
-		$filePath = $this->getPageFilePath($name, $page);
-		return file_exists($filePath);
+		return file_exists($this->getPageFilePath($name));
 	}
 	public function setPage($name, Page $page){
 		$dirPath = $this->getPageDirPath($name);
 		if(!is_dir($dirPath)){
-			$this->run('mkdir {{dir}}', $name);
+			$this->run('mkdir -p {{dir}}', $name);
 		}
 		$filePath = $this->getPageFilePath($name, $page);
 		if(!file_exists($filePath) || file_get_contents($filePath) !== $page->getContent()){
@@ -103,10 +104,30 @@ class Wiki{
 		}
 		return $path;
 	}
-	public function getPageFilePath($name, Page $item){
-		$dirPath = $this->getPageDirPath($name);
-		$fileName = ($item->getFileName() ?: $name) . '.' . $item->getFileExtension();
-		return $dirPath . '/' . $fileName;
+	public function getPageFilePath($name, Page $item = null){
+		if($item && $item->getPath()){
+			return $this->path . '/' . $item->getPath();
+		}else{
+			$path = $this->path . '/' . $name . '/' . $name . '.' . $this->defaultExtension;
+			if(!file_exists($path)){
+				foreach(glob($this->path . '/' . $name . '/' . $name . '.*') as $file){
+					return $file;
+				}
+			}
+			return $path;
+		}
+	}
+	/*
+	Get file path relative to wiki root
+	*/
+	protected function getRelativeFilePath($path){
+		$path = $this->getRealPath($path);
+		$wikiPath = $this->getRealPath($this->path);
+		if(strpos($path, $wikiPath) === 0 && strlen($path) >= strlen($wikiPath)){
+			return str_replace($wikiPath, '', $path);
+		}else{
+			throw new Exception("getRelativeFilePath(): {$path} does not appear to be in wiki path");
+		}
 	}
 
 	//==shell
@@ -114,9 +135,10 @@ class Wiki{
 		$dirPath = $this->getPageDirPath($name);
 		$command = str_replace('{{dir}}', $dirPath, $command);
 		if($item){
-			$fileName = ($item->getFileName() ?: $name) . '.' . $item->getFileExtension();
+			$filePath = $this->getPageFilePath($name, $item);
+			$fileName = pathinfo($filePath, PATHINFO_BASENAME);
 			$command = str_replace('{{fileName}}', $fileName, $command);
-			$command = str_replace('{{path}}', $dirPath . '/' . $fileName, $command);
+			$command = str_replace('{{path}}', $filePath, $command);
 		}
 		return $command;
 	}

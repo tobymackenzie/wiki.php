@@ -3,13 +3,13 @@ namespace TJM\Wiki;
 
 class Page{
 	protected $content;
-	protected $fileExtension = 'md';
-	protected $fileName;
+	//--$path: relative path within wiki
+	protected $path;
 	public function __construct($opts = []){
 		if($opts){
 			if(!is_array($opts)){
 				$opts = [
-					'fileName'=> $opts,
+					'path'=> $opts,
 				];
 			}
 			foreach($opts as $opt=> $value){
@@ -28,10 +28,7 @@ class Page{
 	public function setContent($content){
 		$this->content = $content;
 	}
-	public function getFileExtension(){
-		return $this->fileExtension;
-	}
-	public function getFileName(){
-		return $this->fileName;
+	public function getPath(){
+		return $this->path;
 	}
 }
