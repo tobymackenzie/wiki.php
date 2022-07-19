@@ -23,6 +23,39 @@ class WikiTest extends TestCase{
 		}, "Expected exception when instantiating Wiki without path");
 	}
 
+	//==files
+	public function testCommitFile(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = 'foo/1.txt';
+		$content = "test\n{$name}\n123";
+		$file = $wiki->getFile($name);
+		$file->setContent($content);
+		chdir(self::WIKI_DIR);
+		$this->assertTrue((bool) $wiki->commitFile($file, "Initial commit"), "Commiting file should not fail");
+		$this->assertEquals("Initial commit\n", shell_exec('git log --pretty="%s"'));
+		$file->setContent($content . "\n456");
+		$this->assertTrue((bool) $wiki->commitFile($file), "Commiting file again should not fail");
+		$this->assertMatchesRegularExpression("/content\(foo\\/1\\.txt\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
+
+	}
+	public function testGetFile(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = '1.txt';
+		$content = "test\n{$name}\n123";
+		file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+		$file = $wiki->getFile($name);
+		$this->assertEquals($content, $file->getContent());
+	}
+	public function testWriteFile(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = '1.txt';
+		$content = "test\n{$name}\n123";
+		$file = $wiki->getFile($name);
+		$file->setContent($content);
+		$this->assertTrue($wiki->writeFile($file));
+		$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
+	}
+
 	//==pages
 	public function testCommitPage(){
 		$wiki = new Wiki(self::WIKI_DIR);
@@ -109,8 +142,7 @@ class WikiTest extends TestCase{
 			'foo-bar',
 			'foo.bar',
 		] as $name){
-			$page = new Page();
-			$this->assertEquals(self::WIKI_DIR . "/{$name}/{$name}.md", $wiki->getPageFilePath($name, $page));
+			$this->assertEquals(self::WIKI_DIR . "/{$name}/{$name}.md", $wiki->getPageFilePath($name));
 		}
 	}
 
