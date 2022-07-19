@@ -76,7 +76,7 @@ class Wiki{
 		$path = $this->getFilePath($file);
 		$dirPath = pathinfo($path, PATHINFO_DIRNAME);
 		if(!is_dir($dirPath)){
-			$this->run('mkdir -p ' . $dirPath);
+			$this->runShell('mkdir -p ' . $dirPath);
 		}
 		if(!file_exists($path) || file_get_contents($path) !== $file->getContent()){
 			return (bool) file_put_contents($path, $file->getContent());
