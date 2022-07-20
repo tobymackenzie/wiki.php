@@ -1,5 +1,5 @@
 <?php
-namespace TJM\Project\Tests;
+namespace TJM\Wiki\Tests;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use TJM\Wiki\Page;
