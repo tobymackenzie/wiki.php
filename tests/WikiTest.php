@@ -36,7 +36,6 @@ class WikiTest extends TestCase{
 		$file->setContent($content . "\n456");
 		$this->assertTrue((bool) $wiki->commitFile($file), "Commiting file again should not fail");
 		$this->assertMatchesRegularExpression("/content\(foo\\/1\\.txt\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
-
 	}
 	public function testGetFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
@@ -54,6 +53,26 @@ class WikiTest extends TestCase{
 		$file->setContent($content);
 		$this->assertTrue($wiki->writeFile($file));
 		$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
+	}
+
+	//==git
+	public function testStage(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = '1.txt';
+		$content = "test\n123";
+		$statusCommand = '-c color.status=false status --short';
+		$this->assertEquals("", $wiki->runGit($statusCommand));
+		$file1 = self::WIKI_DIR . '/1.txt';
+		file_put_contents($file1, 'abc');
+		$wiki->stage('1.txt');
+		$this->assertEquals("A  1.txt", $wiki->runGit($statusCommand));
+		$file2 = self::WIKI_DIR . '/2.txt';
+		file_put_contents($file2, 'abc');
+		$wiki->stage(['1.txt', '2.txt']);
+		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit($statusCommand));
+		file_put_contents($file2, 'abcd');
+		$wiki->stage(Wiki::STAGE_ALL);
+		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit($statusCommand));
 	}
 
 	//==pages

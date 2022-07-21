@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use TJM\ShellRunner\ShellRunner;
 
 class Wiki{
+	const STAGE_ALL = '*';
 	protected $defaultExtension = 'md';
 	protected $mediaDir = '_media';
 	protected $path;
@@ -33,12 +34,6 @@ class Wiki{
 	}
 
 	//==files
-	public function commit($message = null){
-		if(empty($message)){
-			$message = 'content: ' . (new DateTime())->format('Y-m-d H:i:s');
-		}
-		return $this->runGit("commit -m " . escapeshellarg($message));
-	}
 	public function commitFile(File $file, $message = null){
 		$this->writeFile($file);
 		if(empty($message)){
@@ -49,7 +44,7 @@ class Wiki{
 			}
 			$message = 'content(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
-		$this->runGit("add " . escapeshellarg($this->getFilePath($file)));
+		$this->stage($file);
 		return $this->commit($message);
 	}
 	public function getFile($name){
@@ -82,6 +77,26 @@ class Wiki{
 			return (bool) file_put_contents($path, $file->getContent());
 		}
 		return false;
+	}
+
+	//==git
+	public function commit($message = null){
+		if(empty($message)){
+			$message = 'content: ' . (new DateTime())->format('Y-m-d H:i:s');
+		}
+		return $this->runGit("commit -m " . escapeshellarg($message));
+	}
+	public function stage($files){
+		$args = [];
+		$opts = [];
+		foreach(is_array($files) ? $files : [$files] as $file){
+			if($file === static::STAGE_ALL){
+				$opts[] = '--all';
+			}else{
+				$args[] = escapeshellarg($this->getFilePath($file));
+			}
+		}
+		return $this->runGit("add " . implode(' ', $opts) . ' ' . implode(' ', $args));
 	}
 
 	//==pages
