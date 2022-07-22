@@ -45,6 +45,14 @@ class WikiTest extends TestCase{
 		$file = $wiki->getFile($name);
 		$this->assertEquals($content, $file->getContent());
 	}
+	public function testHasFile(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = '1.txt';
+		$this->assertFalse($wiki->hasFile($name), 'File should not exist before creation.');
+		$content = "test\n123";
+		file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+		$this->assertTrue($wiki->hasFile($name), 'File should exist after creation');
+	}
 	public function testWriteFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		$name = '1.txt';

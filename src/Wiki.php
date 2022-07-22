@@ -64,6 +64,11 @@ class Wiki{
 		}
 		return $file;
 	}
+	public function hasFile($name){
+		$filePath = $this->getFilePath($name);
+		$file = new File($this->getRelativeFilePath($filePath));
+		return file_exists($filePath);
+	}
 	public function writeFile(File $file){
 		if(!$file->getPath()){
 			throw new Exception("writeFile(): File does not have a path");
