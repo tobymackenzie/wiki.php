@@ -37,32 +37,26 @@ class Wiki{
 	public function commitFile(File $file, $message = null){
 		$this->writeFile($file);
 		if(empty($message)){
-			if($file instanceof Page){
-				$name = $file->getName();
-			}else{
-				$name = $file->getPath();
-			}
+			$name = $file->getPath();
 			$message = 'content(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
 		$this->stage($file);
 		return $this->commit($message);
 	}
 	public function getFile($name){
-		//-! need something more advanced for sub-pages
-		if(strpos($name, '/') === false && strpos($name, '.') === false){
-			$filePath = $this->getPageFilePath($name);
-			$file = new Page([
-				'name'=> $name,
-				'path'=> $this->getRelativeFilePath($filePath),
-			]);
-		}else{
-			$filePath = $this->getFilePath($name);
-			$file = new File($this->getRelativeFilePath($filePath));
-		}
+		$filePath = $this->getFilePath($name);
+		$file = new File($this->getRelativeFilePath($filePath));
 		if(file_exists($filePath)){
 			$file->setContent(file_get_contents($filePath));
 		}
 		return $file;
+	}
+	public function getFileDir($name){
+		$path = $this->getFilePath($name);
+		if(!$this->isWikiPathSafe($path)){
+			throw new InvalidArgumentException("Page name {$name} invalid.");
+		}
+		return dirname($path);
 	}
 	public function hasFile($name){
 		$filePath = $this->getFilePath($name);
@@ -84,6 +78,32 @@ class Wiki{
 		return false;
 	}
 
+	//--pages
+	public function getPage($name){
+		$file = $this->getFile($this->getRelativeFilePath($this->getPageFilePath($name)));
+		return $file;
+	}
+	public function hasPage($name){
+		return file_exists($this->getPageFilePath($name));
+	}
+	public function getPageFilePath($name){
+		$basePath = $this->getFilePath($name);
+		$path = $basePath . '.' . $this->defaultExtension;
+		if(file_exists($path) && is_file($path)){
+			return $path;
+		}
+		$path = $basePath;
+		if(file_exists($path) && is_file($path)){
+			return $path;
+		}
+		foreach(glob($basePath . '.*') as $path){
+			if(is_file($path)){
+				return $path;
+			}
+		}
+		return $basePath . '.' . $this->defaultExtension;
+	}
+
 	//==git
 	public function commit($message = null){
 		if(empty($message)){
@@ -102,32 +122,6 @@ class Wiki{
 			}
 		}
 		return $this->runGit("add " . implode(' ', $opts) . ' ' . implode(' ', $args));
-	}
-
-	//==pages
-	public function commitPage($name, Page $page, $message = null){
-		$this->setPage($name, $page);
-		return $this->commitFile($page, $message);
-	}
-	public function getPage($name){
-		//-! maybe use meta to configure file name if different from default
-		$file = $this->getFile($name);
-		if(!($file instanceof Page)){
-			throw new Exception("getPage(): {$name} does not reference a page");
-		}
-		return $file;
-	}
-	public function hasPage($name){
-		return file_exists($this->getPageFilePath($name));
-	}
-	public function setPage($name, Page $page){
-		if($page->getName() !== $name){
-			$page->setName($name);
-		}
-		if(!$page->getPath()){
-			$page->setPath($this->getRelativeFilePath($this->getPageFilePath($name)));
-		}
-		return $this->writeFile($page);
 	}
 
 	//==paths
@@ -165,22 +159,6 @@ class Wiki{
 		}
 		return '/' . implode('/', $realPath);
 	}
-	public function getPageDirPath($name){
-		$path = $this->path . '/' . $name;
-		if(!$this->isWikiPathSafe($path)){
-			throw new InvalidArgumentException("Page name {$name} invalid.");
-		}
-		return $path;
-	}
-	public function getPageFilePath($name){
-		$path = $this->getPageDirPath($name) . '/' . $name . '.' . $this->defaultExtension;
-		if(!file_exists($path)){
-			foreach(glob($this->getPageDirPath($name) . '/' . $name . '.*') as $file){
-				return $file;
-			}
-		}
-		return $path;
-	}
 	/*
 	Get file path relative to wiki root
 	*/
@@ -205,13 +183,6 @@ class Wiki{
 
 	//==shell
 	protected function parseCommandString($command, $name = null, File $item = null){
-		if(!$name && $item instanceof Page){
-			$name = $page->getName();
-		}
-		if($name){
-			$dirPath = $this->getPageDirPath($name);
-			$command = str_replace('{{dir}}', $dirPath, $command);
-		}
 		if($item){
 			$filePath = $this->getFilePath($item);
 			$fileName = pathinfo($filePath, PATHINFO_BASENAME);

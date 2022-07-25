@@ -2,7 +2,7 @@
 namespace TJM\Wiki\Tests;
 use Exception;
 use PHPUnit\Framework\TestCase;
-use TJM\Wiki\Page;
+use TJM\Wiki\File;
 use TJM\Wiki\Wiki;
 
 class WikiTest extends TestCase{
@@ -63,6 +63,44 @@ class WikiTest extends TestCase{
 		$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
 	}
 
+	//--pages
+	public function testGetPage(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$name = '1';
+		$content = "test\n123";
+		file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+		$file = $wiki->getPage($name);
+		$this->assertEquals($content, $file->getContent());
+		$content = "123\ntest";
+		file_put_contents(self::WIKI_DIR . '/' . $name . '.md', $content);
+		$file = $wiki->getPage($name);
+		$this->assertEquals($content, $file->getContent());
+	}
+	public function testHasPage(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$this->assertFalse($wiki->hasPage('1'), 'File should not exist before creation.');
+		mkdir(self::WIKI_DIR . '/1');
+		$this->assertFalse($wiki->hasPage('1'), 'File should not exist for folder of same name.');
+		rmdir(self::WIKI_DIR . '/1');
+		file_put_contents(self::WIKI_DIR . '/1', '123');
+		$this->assertTrue($wiki->hasPage('1'), 'File should exist after creating extensionless file');
+		file_put_contents(self::WIKI_DIR . '/1.md', '321');
+		$this->assertTrue($wiki->hasPage('1'), 'File should still exist after creating with extension');
+	}
+	public function testGetPageFilePath(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		foreach([
+			'foo'=> 'foo.md',
+			'foo/bar'=> 'foo/bar.md',
+		] as $name=> $path){
+			$this->assertEquals(self::WIKI_DIR . '/' . $path, $wiki->getPageFilePath($name));
+		}
+		mkdir(self::WIKI_DIR . '/foo');
+		$this->assertEquals(self::WIKI_DIR . '/foo.md', $wiki->getPageFilePath('foo'));
+		file_put_contents(self::WIKI_DIR . '/foo.txt', 'test123');
+		$this->assertEquals(self::WIKI_DIR . '/foo.txt', $wiki->getPageFilePath('foo'));
+	}
+
 	//==git
 	public function testStage(){
 		$wiki = new Wiki(self::WIKI_DIR);
@@ -83,108 +121,18 @@ class WikiTest extends TestCase{
 		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit($statusCommand));
 	}
 
-	//==pages
-	public function testCommitPage(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		$name = 'foo';
-		$content = "test\n{$name}\n123";
-		$page = new Page();
-		$page->setContent($content);
-		$this->assertTrue((bool) $wiki->commitPage($name, $page, "Initial commit"), "Commiting page should not fail");
-		chdir($wiki->getPageDirPath($name));
-		$this->assertEquals("Initial commit\n", shell_exec('git log --pretty="%s"'));
-		$page->setContent($content . "\n456");
-		$this->assertTrue((bool) $wiki->commitPage($name, $page), "Commiting page again should not fail");
-		$this->assertMatchesRegularExpression("/content\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}\nInitial commit\n/", shell_exec('git log --pretty="%s"'));
-
-	}
-	public function testGetPage(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		$name = 'foo';
-		$content = "test\n{$name}\n123";
-		$pageDir = self::WIKI_DIR . '/' . $name;
-		if(!is_dir($pageDir)){
-			mkdir($pageDir);
-		}
-		$pagePath = $pageDir . '/' . $name . '.md';
-		file_put_contents($pagePath, $content);
-		$page = $wiki->getPage($name);
-		$this->assertEquals($content, $page->getContent());
-	}
-	public function testHasPage(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		$name = 'foo';
-		$this->assertFalse($wiki->hasPage($name));
-		$wiki->setPage($name, $wiki->getPage($name));
-		$this->assertTrue($wiki->hasPage($name));
-	}
-	public function testSetPage(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		foreach([
-			'foo',
-			'bar',
-			'foo-bar',
-			'foo.bar',
-		] as $name){
-			$content = "test\n{$name}\n123";
-			$page = new Page();
-			$page->setContent($content);
-			$this->assertTrue($wiki->setPage($name, $page), "Page {$name} should be created.");
-			$this->assertEquals("{$name}.md\n", shell_exec("ls " . self::WIKI_DIR . "/{$name}"));
-			$this->assertEquals(file_get_contents(self::WIKI_DIR . "/{$name}/{$name}.md"), $content);
-		}
-	}
-
-
-	//==paths
-	public function testGetPageDirPath(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		foreach([
-			'foo',
-			'bar',
-			'foo/bar',
-			'foo-bar',
-			'foo.bar',
-		] as $name){
-			$this->assertEquals(self::WIKI_DIR . '/' . $name, $wiki->getPageDirPath($name));
-		}
-	}
-	public function testInvalidGetPageDirPath(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		foreach([
-			'../foo',
-			'./foo-bar/../../../foo/bar',
-			'',
-		] as $name){
-			$this->assertException(Exception::class, function() use($name, $page, $wiki){
-				$wiki->getPageDirPath($name);
-			}, "Expected exception for Page with name {$name}");
-		}
-	}
-	public function testGetPageFilePath(){
-		$wiki = new Wiki(self::WIKI_DIR);
-		foreach([
-			'foo',
-			'bar',
-			'foo-bar',
-			'foo.bar',
-		] as $name){
-			$this->assertEquals(self::WIKI_DIR . "/{$name}/{$name}.md", $wiki->getPageFilePath($name));
-		}
-	}
-
 	//==shell
 	public function testRun(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name = 'foo';
-		$page = new Page();
-		$page->setContent('test');
-		$wiki->setPage($name, $page);
-		$this->assertEquals('test', $wiki->run('cat {{path}}', $name, $page));
-		$wiki->run('echo "bar" >> {{path}}', $name, $page);
-		$this->assertEquals("testbar", $wiki->run(array('command'=> 'cat {{path}}'), $name, $page));
-		$this->assertEquals('foo.md', $wiki->run('ls {{dir}}', $name));
-		$this->assertEquals('foo.md', $wiki->run('ls', $name, null, $wiki->getPageDirPath($name)));
+		$name = 'foo.md';
+		$file = new File($name);
+		$file->setContent('test');
+		$wiki->writeFile($file);
+		$this->assertEquals('test', $wiki->run('cat {{path}}', $name, $file));
+		$wiki->run('echo "bar" >> {{path}}', $name, $file);
+		$this->assertEquals("testbar", $wiki->run(array('command'=> 'cat {{path}}'), $name, $file));
+		$this->assertEquals('foo.md', $wiki->run('ls ' . self::WIKI_DIR, $name));
+		$this->assertEquals('foo.md', $wiki->run('ls', $name, null, $wiki->getFileDir($name)));
 	}
 
 	/*=====
