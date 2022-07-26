@@ -38,6 +38,9 @@ class Wiki{
 		$this->writeFile($file);
 		if(empty($message)){
 			$name = $file->getPath();
+			if(pathinfo($name, PATHINFO_EXTENSION) === $this->defaultExtension){
+				$name = substr($name, 0, -1 * (strlen($this->defaultExtension) + 1));
+			}
 			$message = 'content(' . $name . '): ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
 		$this->stage($file);

@@ -7,6 +7,8 @@ use TJM\Wiki\Wiki;
 
 class WikiTest extends TestCase{
 	const WIKI_DIR = __DIR__ . '/tmp';
+	const STATUS_COMMAND = '-c color.status=false status --short';
+
 	static public function setUpBeforeClass(): void{
 		mkdir(self::WIKI_DIR);
 	}
@@ -100,25 +102,32 @@ class WikiTest extends TestCase{
 		file_put_contents(self::WIKI_DIR . '/foo.txt', 'test123');
 		$this->assertEquals(self::WIKI_DIR . '/foo.txt', $wiki->getPageFilePath('foo'));
 	}
+	public function testCommitPageFile(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$page = $wiki->getPage('foo');
+		$page->setContent('123');
+		$wiki->commitFile($page);
+		chdir(self::WIKI_DIR);
+		$this->assertMatchesRegularExpression("/content\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}/", shell_exec('git log --pretty="%s"'));
+	}
 
 	//==git
 	public function testStage(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		$name = '1.txt';
 		$content = "test\n123";
-		$statusCommand = '-c color.status=false status --short';
-		$this->assertEquals("", $wiki->runGit($statusCommand));
+		$this->assertEquals("", $wiki->runGit(self::STATUS_COMMAND));
 		$file1 = self::WIKI_DIR . '/1.txt';
 		file_put_contents($file1, 'abc');
 		$wiki->stage('1.txt');
-		$this->assertEquals("A  1.txt", $wiki->runGit($statusCommand));
+		$this->assertEquals("A  1.txt", $wiki->runGit(self::STATUS_COMMAND));
 		$file2 = self::WIKI_DIR . '/2.txt';
 		file_put_contents($file2, 'abc');
 		$wiki->stage(['1.txt', '2.txt']);
-		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit($statusCommand));
+		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit(self::STATUS_COMMAND));
 		file_put_contents($file2, 'abcd');
 		$wiki->stage(Wiki::STAGE_ALL);
-		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit($statusCommand));
+		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit(self::STATUS_COMMAND));
 	}
 
 	//==shell
