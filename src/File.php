@@ -28,6 +28,9 @@ class File{
 	public function setContent($content){
 		$this->content = $content;
 	}
+	public function getExtension(){
+		return pathinfo($this->getPath(), PATHINFO_EXTENSION);
+	}
 	public function getPath(){
 		return $this->path;
 	}
