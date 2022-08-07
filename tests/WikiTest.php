@@ -79,6 +79,20 @@ class WikiTest extends TestCase{
 		$this->assertTrue($wiki->writeFile($file));
 		$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
 	}
+	public function testFilenameShellSecurity(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		foreach([
+			'1.txt && rm -r .',
+			'1.txt\' && rm -r .',
+		] as $name){
+			$content = "test\n{$name}\n123";
+			$file = $wiki->getFile($name);
+			$file->setContent($content);
+			$this->assertTrue($wiki->writeFile($file));
+			$this->assertTrue(file_exists(self::WIKI_DIR . '/' . $name));
+			$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
+		}
+	}
 
 	//--pages
 	public function testGetPage(){

@@ -82,7 +82,7 @@ class Wiki{
 		$path = $this->getFilePath($file);
 		$dirPath = pathinfo($path, PATHINFO_DIRNAME);
 		if(!is_dir($dirPath)){
-			$this->runShell('mkdir -p ' . $dirPath);
+			$this->runShell('mkdir -p ' . escapeshellarg($dirPath));
 		}
 		if(!file_exists($path) || file_get_contents($path) !== $file->getContent()){
 			return (bool) file_put_contents($path, $file->getContent());
@@ -198,8 +198,8 @@ class Wiki{
 		if($item){
 			$filePath = $this->getFilePath($item);
 			$fileName = pathinfo($filePath, PATHINFO_BASENAME);
-			$command = str_replace('{{fileName}}', $fileName, $command);
-			$command = str_replace('{{path}}', $filePath, $command);
+			$command = str_replace('{{fileName}}', escapeshellarg($fileName), $command);
+			$command = str_replace('{{path}}', escapeshellarg($filePath), $command);
 		}
 		return $command;
 	}
