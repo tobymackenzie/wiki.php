@@ -66,6 +66,15 @@ class Wiki{
 		$file = new File($this->getRelativeFilePath($filePath));
 		return file_exists($filePath);
 	}
+	public function moveFile(File $file, $name){
+		if($this->hasFile($name)){
+			throw new Exception("Cannot move file to {$name}: File already exists.");
+		}
+		$oldPath = $this->getFilePath($file);
+		$newPath = $this->getFilePath($name);
+		$file->setPath($this->getRelativeFilePath($newPath));
+		return $this->run('mv ' . escapeshellarg($oldPath) . ' ' . escapeshellarg($newPath));
+	}
 	public function writeFile(File $file){
 		if(!$file->getPath()){
 			throw new Exception("writeFile(): File does not have a path");
