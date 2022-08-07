@@ -79,6 +79,12 @@ class Wiki{
 		$file->setPath($this->getRelativeFilePath($newPath));
 		return $this->run('mv ' . escapeshellarg($oldPath) . ' ' . escapeshellarg($newPath));
 	}
+	public function removeFile(File $file){
+		if($this->hasFile($file)){
+			return unlink($this->getFilePath($file));
+		}
+		return false;
+	}
 	public function writeFile(File $file){
 		if(!$file->getPath()){
 			throw new Exception("writeFile(): File does not have a path");

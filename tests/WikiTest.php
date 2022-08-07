@@ -84,6 +84,22 @@ class WikiTest extends TestCase{
 			$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name2));
 		}
 	}
+	public function testRemoveFile(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		foreach([
+			'1.txt', //--root
+			 'foo/1.txt', //--subdir
+		] as $name){
+			$content = "test\n123";
+			$file = $wiki->getFile($name);
+			$this->assertFalse($wiki->hasFile($file));
+			$file->setContent($content);
+			$wiki->writeFile($file);
+			$this->assertTrue($wiki->hasFile($name));
+			$wiki->removeFile($file);
+			$this->assertFalse($wiki->hasFile($name));
+		}
+	}
 	public function testWriteFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([
