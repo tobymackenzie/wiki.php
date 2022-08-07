@@ -72,6 +72,10 @@ class Wiki{
 		}
 		$oldPath = $this->getFilePath($file);
 		$newPath = $this->getFilePath($name);
+		$newDirPath = pathinfo($newPath, PATHINFO_DIRNAME);
+		if(!file_exists($newDirPath)){
+			$this->runShell('mkdir -p ' . escapeshellarg($newDirPath));
+		}
 		$file->setPath($this->getRelativeFilePath($newPath));
 		return $this->run('mv ' . escapeshellarg($oldPath) . ' ' . escapeshellarg($newPath));
 	}

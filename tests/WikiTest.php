@@ -41,43 +41,61 @@ class WikiTest extends TestCase{
 	}
 	public function testGetFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name = '1.txt';
-		$content = "test\n{$name}\n123";
-		file_put_contents(self::WIKI_DIR . '/' . $name, $content);
-		$file = $wiki->getFile($name);
-		$this->assertEquals($content, $file->getContent());
+		mkdir(self::WIKI_DIR . '/foo');
+		foreach([
+			'1.txt', //--root
+			 'foo/1.txt', //--subdir
+		] as $name){
+			$content = "test\n{$name}\n123";
+			file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+			$file = $wiki->getFile($name);
+			$this->assertEquals($content, $file->getContent());
+
+		}
 	}
 	public function testHasFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name = '1.txt';
-		$this->assertFalse($wiki->hasFile($name), 'File should not exist before creation.');
-		$content = "test\n123";
-		file_put_contents(self::WIKI_DIR . '/' . $name, $content);
-		$this->assertTrue($wiki->hasFile($name), 'File should exist after creation');
+		mkdir(self::WIKI_DIR . '/foo');
+		foreach([
+			'1.txt', //--root
+			 'foo/1.txt', //--subdir
+		] as $name){
+			$this->assertFalse($wiki->hasFile($name), 'File should not exist before creation.');
+			$content = "test\n123";
+			file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+			$this->assertTrue($wiki->hasFile($name), 'File should exist after creation');
+		}
 	}
 	public function testMoveFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name1 = '1.txt';
-		$name2 = '2.txt';
-		$content = "test\n123";
-		$file = $wiki->getFile($name1);
-		$file->setContent($content);
-		$wiki->writeFile($file);
-		$this->assertTrue($wiki->hasFile($name1));
-		$this->assertFalse($wiki->hasFile($name2));
-		$wiki->moveFile($file, $name2);
-		$this->assertFalse($wiki->hasFile($name1));
-		$this->assertTrue($wiki->hasFile($name2));
-		$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name2));
+		foreach([
+			'1.txt'=> '2.txt', //--root
+			 '3.txt'=> 'foo/3.txt', //--subdir
+		] as $name1=> $name2){
+			$content = "test\n123";
+			$file = $wiki->getFile($name1);
+			$file->setContent($content);
+			$wiki->writeFile($file);
+			$this->assertTrue($wiki->hasFile($name1));
+			$this->assertFalse($wiki->hasFile($name2));
+			$wiki->moveFile($file, $name2);
+			$this->assertFalse($wiki->hasFile($name1));
+			$this->assertTrue($wiki->hasFile($name2));
+			$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name2));
+		}
 	}
 	public function testWriteFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name = '1.txt';
-		$content = "test\n{$name}\n123";
-		$file = $wiki->getFile($name);
-		$file->setContent($content);
-		$this->assertTrue($wiki->writeFile($file));
-		$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
+		foreach([
+			'1.txt', //--root
+			 'foo/1.txt', //--subdir
+		] as $name){
+			$content = "test\n{$name}\n123";
+			$file = $wiki->getFile($name);
+			$file->setContent($content);
+			$this->assertTrue($wiki->writeFile($file));
+			$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
+		}
 	}
 	public function testFilenameShellSecurity(){
 		$wiki = new Wiki(self::WIKI_DIR);
@@ -97,26 +115,36 @@ class WikiTest extends TestCase{
 	//--pages
 	public function testGetPage(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name = '1';
-		$content = "test\n123";
-		file_put_contents(self::WIKI_DIR . '/' . $name, $content);
-		$file = $wiki->getPage($name);
-		$this->assertEquals($content, $file->getContent());
-		$content = "123\ntest";
-		file_put_contents(self::WIKI_DIR . '/' . $name . '.md', $content);
-		$file = $wiki->getPage($name);
-		$this->assertEquals($content, $file->getContent());
+		mkdir(self::WIKI_DIR . '/foo');
+		foreach([
+			'1', //--root
+			 'foo/1', //--subdir
+		] as $name){
+			$content = "test\n{$name}\n123";
+			file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+			$file = $wiki->getPage($name);
+			$this->assertEquals($content, $file->getContent());
+			$content = "123\ntest";
+			file_put_contents(self::WIKI_DIR . '/' . $name . '.md', $content);
+			$file = $wiki->getPage($name);
+			$this->assertEquals($content, $file->getContent());
+		}
 	}
 	public function testHasPage(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$this->assertFalse($wiki->hasPage('1'), 'File should not exist before creation.');
-		mkdir(self::WIKI_DIR . '/1');
-		$this->assertFalse($wiki->hasPage('1'), 'File should not exist for folder of same name.');
-		rmdir(self::WIKI_DIR . '/1');
-		file_put_contents(self::WIKI_DIR . '/1', '123');
-		$this->assertTrue($wiki->hasPage('1'), 'File should exist after creating extensionless file');
-		file_put_contents(self::WIKI_DIR . '/1.md', '321');
-		$this->assertTrue($wiki->hasPage('1'), 'File should still exist after creating with extension');
+		foreach([
+			'1', //--root
+			 'foo/1', //--subdir
+		] as $name){
+			$this->assertFalse($wiki->hasPage($name), 'File should not exist before creation.');
+			$wiki->run('mkdir -p ' . self::WIKI_DIR . '/' . $name);
+			$this->assertFalse($wiki->hasPage($name), 'File should not exist for folder of same name.');
+			rmdir(self::WIKI_DIR . '/' . $name);
+			file_put_contents(self::WIKI_DIR . '/' . $name, '123');
+			$this->assertTrue($wiki->hasPage($name), 'File should exist after creating extensionless file');
+			file_put_contents(self::WIKI_DIR . '/' . $name . '.md', '321');
+			$this->assertTrue($wiki->hasPage($name), 'File should still exist after creating with extension');
+		}
 	}
 	public function testGetPageFilePath(){
 		$wiki = new Wiki(self::WIKI_DIR);
@@ -162,15 +190,20 @@ class WikiTest extends TestCase{
 	//==shell
 	public function testRun(){
 		$wiki = new Wiki(self::WIKI_DIR);
-		$name = 'foo.md';
-		$file = new File($name);
-		$file->setContent('test');
-		$wiki->writeFile($file);
-		$this->assertEquals('test', $wiki->run('cat {{path}}', $name, $file));
-		$wiki->run('echo "bar" >> {{path}}', $name, $file);
-		$this->assertEquals("testbar", $wiki->run(array('command'=> 'cat {{path}}'), $name, $file));
-		$this->assertEquals('foo.md', $wiki->run('ls ' . self::WIKI_DIR, $name));
-		$this->assertEquals('foo.md', $wiki->run('ls', $name, null, $wiki->getFileDir($name)));
+		foreach([
+			'foo.md',
+			'foo/1.md',
+		] as $name){
+			$name = 'foo.md';
+			$file = new File($name);
+			$file->setContent($name . 'test');
+			$wiki->writeFile($file);
+			$this->assertEquals($name . 'test', $wiki->run('cat {{path}}', $name, $file));
+			$wiki->run('echo "bar" >> {{path}}', $name, $file);
+			$this->assertEquals($name . "testbar", $wiki->run(array('command'=> 'cat {{path}}'), $name, $file));
+			$this->assertEquals($name, $wiki->run('ls ' . self::WIKI_DIR, $name));
+			$this->assertEquals($name, $wiki->run('ls', $name, null, $wiki->getFileDir($name)));
+		}
 	}
 
 	/*=====
