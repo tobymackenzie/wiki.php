@@ -102,6 +102,22 @@ class WikiTest extends TestCase{
 			$this->assertFalse($wiki->hasFile($try), "File {$name} should not exist with wrong case {$try}.");
 		}
 	}
+	public function testHasntFileFolder(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		mkdir(self::WIKI_DIR . '/foo/bar');
+		$content = "test\n123";
+		//--add some noise files to ensure they don't affect file find
+		file_put_contents(self::WIKI_DIR . '/foo/foo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/bar/bar.md', $content);
+
+		foreach([
+			'foo', //--root
+			 'foo/bar', //--subdir
+		] as $name){
+			$this->assertFalse($wiki->hasFile($name), "File {$name} should not exist when only a folder exists.");
+		}
+	}
 	public function testMoveFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([

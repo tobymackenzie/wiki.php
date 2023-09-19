@@ -50,12 +50,12 @@ class Wiki{
 	Determine if file exists, case sensitive on file name (excluding extension)
 	*/
 	protected function fileExists($name){
-		if(file_exists($name)){
+		if(file_exists($name) && is_file($name)){
 			if(trim(shell_exec('uname 2> /dev/null')) === 'Darwin'){			
 				//--check case sensitive file name on Mac (assume case sensitive FS on other OS)
 				//-! will this cause problems if code tries creating a file on a case insensitive system that already exists case insensitively?
 				//-! using find for forcing case sensitivity. a bit heavy, but I'm not sure if there is another way.  Would be nice to determine if fs is case insensitive first if it could be done cheaply, but seems the only way is to create file, rename, and test.
-				$cmd = "find " . dirname($name) . " -maxdepth 1 -name '" . pathinfo($name, PATHINFO_FILENAME) . "*'";
+				$cmd = "find " . dirname($name) . " -maxdepth 1 -type f -name '" . pathinfo($name, PATHINFO_FILENAME) . "*'";
 				$extension = pathinfo($name, PATHINFO_EXTENSION);
 				if($extension){
 					$cmd .= " -iname '*.{$extension}'";
@@ -97,7 +97,7 @@ class Wiki{
 		$oldPath = $this->getFilePath($file);
 		$newPath = $this->getFilePath($name);
 		$newDirPath = pathinfo($newPath, PATHINFO_DIRNAME);
-		if(!$this->fileExists($newDirPath)){
+		if(!file_exists($newDirPath)){
 			$this->runShell('mkdir -p ' . escapeshellarg($newDirPath));
 		}
 		$file->setPath($this->getRelativeFilePath($newPath));
@@ -135,11 +135,11 @@ class Wiki{
 	public function getPageFilePath($name){
 		$basePath = $this->getFilePath($name);
 		$path = $basePath . '.' . $this->defaultExtension;
-		if($this->fileExists($path) && is_file($path)){
+		if($this->fileExists($path)){
 			return $path;
 		}
 		$path = $basePath;
-		if($this->fileExists($path) && is_file($path)){
+		if($this->fileExists($path)){
 			return $path;
 		}
 		foreach(glob($basePath . '.*') as $path){
