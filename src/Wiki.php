@@ -63,7 +63,8 @@ class Wiki{
 	}
 	public function hasFile($name){
 		$filePath = $this->getFilePath($name);
-		$file = new File($this->getRelativeFilePath($filePath));
+		//--make sure path is in repo via side effect
+		$this->getRelativeFilePath($filePath);
 		return file_exists($filePath);
 	}
 	public function moveFile(File $file, $name){
