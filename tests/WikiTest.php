@@ -66,6 +66,42 @@ class WikiTest extends TestCase{
 			$this->assertTrue($wiki->hasFile($name), 'File should exist after creation');
 		}
 	}
+	public function testHasFileWrongCaseExtension(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		mkdir(self::WIKI_DIR . '/foo/bar');
+		$content = "test\n123";
+		//--add some noise files to ensure they don't affect file find
+		file_put_contents(self::WIKI_DIR . '/foo/two.ttxt', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/twomore.txt', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/bar/two.txt', $content);
+
+		foreach([
+			'one.txt'=> 'one.TXT', //--root
+			 'foo/two.txt'=> 'foo/two.TXT', //--subdir
+		] as $name=> $try){
+			file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+			$this->assertTrue($wiki->hasFile($try), "File {$name} should exist with wrong case of extension {$try}.");
+		}
+	}
+	public function testHasntFileWrongCase(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		mkdir(self::WIKI_DIR . '/foo/bar');
+		$content = "test\n123";
+		//--add some noise files to ensure they don't affect file find
+		file_put_contents(self::WIKI_DIR . '/foo/twomore.txt', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/two.ttxt', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/bar/two.txt', $content);
+
+		foreach([
+			'one.txt'=> 'One.txt', //--root
+			 'foo/two.txt'=> 'foo/TWO.txt', //--subdir
+		] as $name=> $try){
+			file_put_contents(self::WIKI_DIR . '/' . $name, $content);
+			$this->assertFalse($wiki->hasFile($try), "File {$name} should not exist with wrong case {$try}.");
+		}
+	}
 	public function testMoveFile(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		foreach([

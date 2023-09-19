@@ -46,10 +46,33 @@ class Wiki{
 		$this->stage($file);
 		return $this->commit($message);
 	}
+	/*
+	Determine if file exists, case sensitive on file name (excluding extension)
+	*/
+	protected function fileExists($name){
+		if(file_exists($name)){
+			if(trim(shell_exec('uname 2> /dev/null')) === 'Darwin'){			
+				//--check case sensitive file name on Mac (assume case sensitive FS on other OS)
+				//-! will this cause problems if code tries creating a file on a case insensitive system that already exists case insensitively?
+				//-! using find for forcing case sensitivity. a bit heavy, but I'm not sure if there is another way.  Would be nice to determine if fs is case insensitive first if it could be done cheaply, but seems the only way is to create file, rename, and test.
+				$cmd = "find " . dirname($name) . " -maxdepth 1 -name '" . pathinfo($name, PATHINFO_FILENAME) . "*'";
+				$extension = pathinfo($name, PATHINFO_EXTENSION);
+				if($extension){
+					$cmd .= " -iname '*.{$extension}'";
+				}
+				$cmd .= " 2> /dev/null";
+				return (bool) shell_exec($cmd);
+			}else{
+				return true;
+			}
+		}else{
+			return false;
+		}
+	}
 	public function getFile($name){
 		$filePath = $this->getFilePath($name);
 		$file = new File($this->getRelativeFilePath($filePath));
-		if(file_exists($filePath)){
+		if($this->fileExists($filePath)){
 			$file->setContent(file_get_contents($filePath));
 		}
 		return $file;
@@ -65,7 +88,7 @@ class Wiki{
 		$filePath = $this->getFilePath($name);
 		//--make sure path is in repo via side effect
 		$this->getRelativeFilePath($filePath);
-		return file_exists($filePath);
+		return $this->fileExists($filePath);
 	}
 	public function moveFile(File $file, $name){
 		if($this->hasFile($name)){
@@ -74,7 +97,7 @@ class Wiki{
 		$oldPath = $this->getFilePath($file);
 		$newPath = $this->getFilePath($name);
 		$newDirPath = pathinfo($newPath, PATHINFO_DIRNAME);
-		if(!file_exists($newDirPath)){
+		if(!$this->fileExists($newDirPath)){
 			$this->runShell('mkdir -p ' . escapeshellarg($newDirPath));
 		}
 		$file->setPath($this->getRelativeFilePath($newPath));
@@ -95,7 +118,7 @@ class Wiki{
 		if(!is_dir($dirPath)){
 			$this->runShell('mkdir -p ' . escapeshellarg($dirPath));
 		}
-		if(!file_exists($path) || file_get_contents($path) !== $file->getContent()){
+		if(!$this->fileExists($path) || file_get_contents($path) !== $file->getContent()){
 			return (bool) file_put_contents($path, $file->getContent());
 		}
 		return false;
@@ -107,16 +130,16 @@ class Wiki{
 		return $file;
 	}
 	public function hasPage($name){
-		return file_exists($this->getPageFilePath($name));
+		return $this->fileExists($this->getPageFilePath($name));
 	}
 	public function getPageFilePath($name){
 		$basePath = $this->getFilePath($name);
 		$path = $basePath . '.' . $this->defaultExtension;
-		if(file_exists($path) && is_file($path)){
+		if($this->fileExists($path) && is_file($path)){
 			return $path;
 		}
 		$path = $basePath;
-		if(file_exists($path) && is_file($path)){
+		if($this->fileExists($path) && is_file($path)){
 			return $path;
 		}
 		foreach(glob($basePath . '.*') as $path){
