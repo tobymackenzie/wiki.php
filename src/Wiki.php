@@ -221,6 +221,47 @@ class Wiki{
 			throw new Exception("getRelativeFilePath(): {$path} does not appear to be in wiki path");
 		}
 	}
+
+	/*
+	get canonical internal path for case insensitve file name
+	! doesn't account for folders
+	*/
+	public function getCanonicalPath($name){
+		if($this->hasPage($name) || $this->hasFile($name)){
+			if(substr($name, 0, 1) !== '/'){
+				$name = '/' . $name;
+			}
+			return $name;
+		}
+		if(substr($name, 0, 1) === '/'){
+			$name = substr($name, 1);
+		}
+		$extension = pathinfo($name, PATHINFO_EXTENSION);
+		if($extension){
+			$nameBit = $name;
+		}else{
+			$nameBit = $name . '\.*';
+		}
+		if($name && strpos($name, '/') === false){
+			$dir = $this->path;
+		}else{
+			$dir = $this->path . '/' . dirname($name);
+			$nameBit = basename($nameBit);
+		}
+		$filePath = shell_exec("find {$dir} -maxdepth 1 -type f -iname '{$nameBit}' 2> /dev/null");
+		if($filePath){
+			$filePath = explode("\n", trim($filePath))[0];
+			if($this->isWikiPathSafe($filePath)){
+				$filePath = str_replace($this->path, '', $filePath);
+				if($extension){
+					return $filePath;
+				}else{
+					return explode('.', $filePath, -1)[0];
+				}
+			}
+		}
+		return null;
+	}
 	protected function isWikiPathSafe($path){
 		$realPath = $this->getRealPath($path);
 		$wikiRealPath = $this->getRealPath($this->path);

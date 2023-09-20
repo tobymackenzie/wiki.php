@@ -255,6 +255,38 @@ class WikiTest extends TestCase{
 		$this->assertEquals("A  1.txt\nA  2.txt", $wiki->runGit(self::STATUS_COMMAND));
 	}
 
+	//==paths
+	public function testCanonicalPathForCase(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		mkdir(self::WIKI_DIR . '/foo/bar');
+		$content = "test\n123";
+		file_put_contents(self::WIKI_DIR . '/index.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/foo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/fooo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/bar/bar.md', $content);
+		foreach([
+			'/iNDex'=> '/index',
+			'/iNDex.md'=> '/index.md',
+			'/foo/foo'=> '/foo/foo',
+			'foo/foo'=> '/foo/foo',
+			'/foo/foo.md'=> '/foo/foo.md',
+			'foo/foo.md'=> '/foo/foo.md',
+			'/foo/FOO'=> '/foo/foo',
+			'foo/FOO'=> '/foo/foo',
+			'foo/FOO.md'=> '/foo/foo.md',
+			'foo/bar/BAR'=> '/foo/bar/bar',
+			'foo/bar/BAR.md'=> '/foo/bar/bar.md',
+
+			'foo/bar'=> null,
+			'foo/BAR'=> null,
+			'foo/barb'=> null,
+			'foo/bar/barb'=> null,
+		] as $name=> $expect){
+			$this->assertEquals($expect, $wiki->getCanonicalPath($name));
+		}
+	}
+
 	//==shell
 	public function testRun(){
 		$wiki = new Wiki(self::WIKI_DIR);
