@@ -55,10 +55,10 @@ class Wiki{
 				//--check case sensitive file name on case insenstive FS
 				//-! will this cause problems if code tries creating a file on a case insensitive system that already exists case insensitively?
 				//-! using find for forcing case sensitivity. a bit heavy, but I'm not sure if there is another way.
-				$cmd = "find " . dirname($name) . " -maxdepth 1 -type f -name '" . pathinfo($name, PATHINFO_FILENAME) . "*'";
+				$cmd = "find " . escapeshellarg(dirname($name)) . " -maxdepth 1 -type f -name " . escapeshellarg(pathinfo($name, PATHINFO_FILENAME) . "*");
 				$extension = pathinfo($name, PATHINFO_EXTENSION);
 				if($extension){
-					$cmd .= " -iname '*.{$extension}'";
+					$cmd .= " -iname " . escapeshellarg("*.{$extension}");
 				}
 				$cmd .= " 2> /dev/null";
 				return (bool) shell_exec($cmd);
@@ -248,7 +248,7 @@ class Wiki{
 			$dir = $this->path . '/' . dirname($name);
 			$nameBit = basename($nameBit);
 		}
-		$filePath = shell_exec("find {$dir} -maxdepth 1 -type f -iname '{$nameBit}' 2> /dev/null");
+		$filePath = shell_exec("find " . escapeshellarg($dir) . " -maxdepth 1 -type f -iname " . escapeshellarg($nameBit) . " 2> /dev/null");
 		if($filePath){
 			$filePath = explode("\n", trim($filePath))[0];
 			if($this->isWikiPathSafe($filePath)){
