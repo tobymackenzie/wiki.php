@@ -73,7 +73,9 @@ class Wiki{
 		$filePath = $this->getFilePath($name);
 		$file = new File($this->getRelativeFilePath($filePath));
 		if($this->fileExists($filePath)){
-			$file->setContent(file_get_contents($filePath));
+			$file->setContent(function() use($filePath){
+				return file_get_contents($filePath);
+			});
 		}
 		return $file;
 	}

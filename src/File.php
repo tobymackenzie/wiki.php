@@ -23,6 +23,10 @@ class File{
 		}
 	}
 	public function getContent(){
+		//--use callable to support lazy loading content.  callable must return content value
+		if(!is_string($this->content) && is_callable($this->content)){
+			$this->content = call_user_func($this->content);
+		}
 		return $this->content;
 	}
 	public function setContent($content){
