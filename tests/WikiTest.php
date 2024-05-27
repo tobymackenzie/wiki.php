@@ -236,6 +236,51 @@ class WikiTest extends TestCase{
 		$this->assertMatchesRegularExpression("/content\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}/", shell_exec('git log --pretty="%s"'));
 	}
 
+	//--meta
+	public function testGetMeta(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		foreach([
+			'1.md', //--root
+			 'foo/1.md', //--subdir
+		] as $name){
+			$content = "test\n{$name}\n123";
+			file_put_contents(self::WIKI_DIR . '/' . $name, "---\nfoo: 123\nfn: '{$name}'\n---\n\n" . $content);
+			$file = $wiki->getFile($name);
+			$this->assertEquals($content, $file->getContent(), 'File content should match set content');
+			$this->assertEquals(123, $file->getMeta('foo'));
+			$this->assertEquals($name, $file->getMeta('fn'));
+			$this->assertSame(null, $file->getMeta('not'));
+		}
+	}
+	public function testSetMeta(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$file = $wiki->getFile('foo.md');
+		$this->assertSame(null, $file->getMeta('foo'));
+		$file->setMeta('foo', 123);
+		$this->assertSame(null, $file->getMeta('fn'));
+		$file->setMeta('fn', 'foo.md');
+		$this->assertEquals(123, $file->getMeta('foo'));
+		$this->assertEquals('foo.md', $file->getMeta('fn'));
+		$this->assertSame(null, $file->getMeta('not'));
+		$this->assertTrue(is_array($file->getMeta()));
+	}
+	public function testWriteMeta(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$file = $wiki->getFile('foo.md');
+		$file->setMeta([
+			'fn'=> 'foo.md',
+			'foo'=> 123,
+		]);
+		$content = "test\nHello world\nfoo";
+		$file->setContent($content);
+		$wiki->writeFile($file);
+		$this->assertEquals("---\nfn: foo.md\nfoo: 123\n---\n\n{$content}", file_get_contents(self::WIKI_DIR . '/foo.md'));
+		$file->setMeta('a', 'apple');
+		$wiki->writeFile($file);
+		$this->assertEquals("---\nfn: foo.md\nfoo: 123\na: apple\n---\n\n{$content}", file_get_contents(self::WIKI_DIR . '/foo.md'));
+	}
+
 	//==git
 	public function testStage(){
 		$wiki = new Wiki(self::WIKI_DIR);

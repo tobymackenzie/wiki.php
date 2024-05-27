@@ -3,11 +3,15 @@ namespace TJM\Wiki;
 use DateTime;
 use Exception;
 use InvalidArgumentException;
+use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
+use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
+use Symfony\Component\Yaml\Yaml;
 use TJM\ShellRunner\ShellRunner;
 
 class Wiki{
 	const STAGE_ALL = '*';
 	protected $defaultExtension = 'md';
+	protected FrontMatterParser $frontMatterParser;
 	protected $mediaDir = '_media';
 	protected $path;
 	protected $shell;
@@ -73,9 +77,29 @@ class Wiki{
 		$filePath = $this->getFilePath($name);
 		$file = new File($this->getRelativeFilePath($filePath));
 		if($this->fileExists($filePath)){
-			$file->setContent(function() use($filePath){
-				return file_get_contents($filePath);
-			});
+			if(class_exists(FrontMatterParser::class) && $file->isMarkdown()){
+				$self = $this;
+				$getParsedFile = function() use($filePath, $self){
+					if(!isset($self->frontMatterParser)){
+						$self->frontMatterParser = new FrontMatterParser(new SymfonyYamlFrontMatterParser());
+					}
+					return $self->frontMatterParser->parse(file_get_contents($filePath));
+				};
+				$file->setMeta(function($file) use($getParsedFile){
+					$parsedFile = $getParsedFile();
+					$file->setConent($parsedFile->getContent());
+					return $parsedFile->getFrontMatter();
+				});
+				$file->setContent(function($file) use($getParsedFile){
+					$parsedFile = $getParsedFile();
+					$file->setMeta($parsedFile->getFrontMatter());
+					return $parsedFile->getContent();
+				});
+			}else{
+				$file->setContent(function() use($filePath){
+					return file_get_contents($filePath);
+				});
+			}
 		}
 		return $file;
 	}
@@ -120,8 +144,12 @@ class Wiki{
 		if(!is_dir($dirPath)){
 			$this->runShell('mkdir -p ' . escapeshellarg($dirPath));
 		}
-		if(!$this->fileExists($path) || file_get_contents($path) !== $file->getContent()){
-			return (bool) file_put_contents($path, $file->getContent());
+		$content = $file->getContent();
+		if($file->isMarkdown() && $file->getMeta()){
+			$content = "---\n" . Yaml::dump($file->getMeta()) . "---\n\n" . $content;
+		}
+		if(!$this->fileExists($path) || file_get_contents($path) !== $content){
+			return (bool) file_put_contents($path, $content);
 		}
 		return false;
 	}
