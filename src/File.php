@@ -2,6 +2,9 @@
 namespace TJM\Wiki;
 
 class File{
+	//-@ https://superuser.com/a/285878
+	const MARKDOWN_EXTENSIONS = ['markdown', 'md', 'mdown', 'mdwn', 'mkd', 'mkdn'];
+
 	protected $content;
 	//--$path: relative path within wiki
 	protected $path;
@@ -34,6 +37,9 @@ class File{
 	}
 	public function getExtension(){
 		return pathinfo($this->getPath(), PATHINFO_EXTENSION);
+	}
+	public function isMarkdown(){
+		return in_array($this->getExtension(), static::MARKDOWN_EXTENSIONS);
 	}
 	public function getPath(){
 		return $this->path;
