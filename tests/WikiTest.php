@@ -331,6 +331,29 @@ class WikiTest extends TestCase{
 			$this->assertEquals($expect, $wiki->getCanonicalPath($name));
 		}
 	}
+	public function testCanonicalPathRegexChars(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		mkdir(self::WIKI_DIR . '/foo/bar');
+		$content = "test\n123";
+		file_put_contents(self::WIKI_DIR . '/index.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/foo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/fooo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/bar/bar.md', $content);
+		foreach([
+			'/*'=> null,
+			'/in*'=> null,
+			'/?'=> null,
+			'/[i]ndex'=> null,
+			'/foo/fo*'=> null,
+			'/.+'=> null,
+			//verify working
+			'/index'=> '/index',
+			'/foo/foo'=> '/foo/foo',
+		] as $name=> $expect){
+			$this->assertEquals($expect, $wiki->getCanonicalPath($name));
+		}
+	}
 	public function testGlobCharsInPageName(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		mkdir(self::WIKI_DIR . '/foo');

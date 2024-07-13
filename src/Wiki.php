@@ -270,9 +270,9 @@ class Wiki{
 		}
 		$extension = pathinfo($name, PATHINFO_EXTENSION);
 		if($extension){
-			$nameBit = $name;
+			$nameBit = preg_quote($name);
 		}else{
-			$nameBit = $name . '\.*';
+			$nameBit = preg_quote($name) . '\.*';
 		}
 		if($name && strpos($name, '/') === false){
 			$dir = $this->path;
