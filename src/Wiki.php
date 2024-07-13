@@ -172,7 +172,9 @@ class Wiki{
 		if($this->fileExists($path)){
 			return $path;
 		}
-		foreach(glob($basePath . '.*') as $path){
+		//--escape glob characters in path
+		$globPath = preg_replace('/([\*\?\[])/', '\\\${1}', $basePath);
+		foreach(glob($globPath . '.*') as $path){
 			if(is_file($path)){
 				return $path;
 			}

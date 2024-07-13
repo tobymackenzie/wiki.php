@@ -331,6 +331,35 @@ class WikiTest extends TestCase{
 			$this->assertEquals($expect, $wiki->getCanonicalPath($name));
 		}
 	}
+	public function testGlobCharsInPageName(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		mkdir(self::WIKI_DIR . '/foo');
+		mkdir(self::WIKI_DIR . '/foo/bar');
+		$content = "test\n123";
+		file_put_contents(self::WIKI_DIR . '/index.md', $content);
+		file_put_contents(self::WIKI_DIR . '/about.md', $content);
+		file_put_contents(self::WIKI_DIR . '/index*.md', $content);
+		file_put_contents(self::WIKI_DIR . '/who?.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/foo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/fooo.md', $content);
+		file_put_contents(self::WIKI_DIR . '/foo/bar/bar.md', $content);
+		foreach([
+			'about'=> true,
+			'index*'=> true,
+			'who?'=> true,
+
+			'foo*'=> false,
+			'foo/*'=> false,
+			'*'=> false,
+			'a*'=> false,
+			'i*'=> false,
+			'index?'=> false,
+			'who*'=> false,
+		] as $path=> $expect){
+			$this->assertEquals($expect, $wiki->hasPage($path), 'Should' . ($expect ? '' : "n't") . ' have page for ' . $path);
+		}
+
+	}
 
 	//==shell
 	public function testRun(){
