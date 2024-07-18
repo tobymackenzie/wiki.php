@@ -2,9 +2,13 @@
 namespace TJM\Wiki;
 use DateTime;
 use Exception;
+use FilesystemIterator;
 use InvalidArgumentException;
 use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
 use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 use Symfony\Component\Yaml\Yaml;
 use TJM\ShellRunner\ShellRunner;
 
@@ -180,6 +184,23 @@ class Wiki{
 			}
 		}
 		return $basePath . '.' . $this->defaultExtension;
+	}
+	public function getPagePaths(): array{
+		$files = [];
+		$removeLength = strlen($this->path);
+		$extensionLength = strlen($this->defaultExtension) + 1;
+		foreach(
+			new RegexIterator(
+				new RecursiveIteratorIterator(
+					new RecursiveDirectoryIterator($this->path, FilesystemIterator::SKIP_DOTS)
+				),
+				'/.*\.' . $this->defaultExtension . '$/', RegexIterator::GET_MATCH
+			)
+		as $file){
+			$file = substr($file[0], $removeLength, -$extensionLength);
+			$files[] = $file;
+		}
+		return $files;
 	}
 
 	//==git

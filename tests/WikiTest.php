@@ -235,6 +235,23 @@ class WikiTest extends TestCase{
 		chdir(self::WIKI_DIR);
 		$this->assertMatchesRegularExpression("/content\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}/", shell_exec('git log --pretty="%s"'));
 	}
+	public function testGetPagePaths(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$pages = [
+			'/index',
+			'/about',
+			'/one',
+			'/one/two',
+			'/one/two/three',
+		];
+		foreach($pages as $pagePath){
+			$page = $wiki->getPage($pagePath);
+			$page->setContent($pagePath . ' content');
+			$wiki->writeFile($page);
+		}
+		$resultPages = $wiki->getPagePaths();
+		$this->assertSame(array_diff($pages, $resultPages), array_diff($resultPages, $pages));
+	}
 
 	//--meta
 	public function testGetMeta(){
