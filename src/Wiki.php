@@ -318,7 +318,11 @@ class Wiki{
 	}
 	protected function isFileSystemCaseInsensitve(){
 		if(!isset($this->fileSystemCaseInsensitvity)){
-			$this->fileSystemCaseInsensitvity = trim(shell_exec('if [ -e "' . __FILE__ . '" -a -e "' . str_replace('.php', '.PHP', __FILE__) . '" ]; then echo "1"; else echo "0"; fi')) === '1';
+			$baseName = '.tmp-' . date('YmdHis');
+			$tmpFile = $this->path . '/' . $baseName;
+			file_put_contents($tmpFile, '1');
+			$this->fileSystemCaseInsensitvity = file_exists($this->path . '/' . strtoupper($baseName));
+			unlink($tmpFile);
 		}
 		return $this->fileSystemCaseInsensitvity;
 	}
