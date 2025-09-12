@@ -16,6 +16,7 @@ class Wiki{
 	const STAGE_ALL = '*';
 	protected $defaultExtension = 'md';
 	protected FrontMatterParser $frontMatterParser;
+	protected $fileSystemCaseInsensitvity;
 	protected $mediaDir = '_media';
 	protected $path;
 	protected $shell;
@@ -59,7 +60,7 @@ class Wiki{
 	*/
 	protected function fileExists($name){
 		if(file_exists($name) && is_file($name)){
-			if(trim(shell_exec('if [ -e "' . __FILE__ . '" -a -e "' . str_replace('.php', '.PHP', __FILE__) . '" ]; then echo "1"; else echo "0"; fi')) === '1'){
+			if($this->isFileSystemCaseInsensitve()){
 				//--check case sensitive file name on case insenstive FS
 				//-! will this cause problems if code tries creating a file on a case insensitive system that already exists case insensitively?
 				//-! using find for forcing case sensitivity. a bit heavy, but I'm not sure if there is another way.
@@ -314,6 +315,12 @@ class Wiki{
 			}
 		}
 		return null;
+	}
+	protected function isFileSystemCaseInsensitve(){
+		if(!isset($this->fileSystemCaseInsensitvity)){
+			$this->fileSystemCaseInsensitvity = trim(shell_exec('if [ -e "' . __FILE__ . '" -a -e "' . str_replace('.php', '.PHP', __FILE__) . '" ]; then echo "1"; else echo "0"; fi')) === '1';
+		}
+		return $this->fileSystemCaseInsensitvity;
 	}
 	protected function isWikiPathSafe($path){
 		$realPath = $this->getRealPath($path);
