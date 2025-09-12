@@ -59,7 +59,7 @@ class Wiki{
 	*/
 	protected function fileExists($name){
 		if(file_exists($name) && is_file($name)){
-			if(trim(shell_exec('if [ -e "' . __FILE__ . " -a -e " . str_replace('.php', '.PHP', __FILE__) . '" ]; then echo "0"; else echo "1"; fi')) === '1'){
+			if(trim(shell_exec('if [ -e "' . __FILE__ . '" -a -e "' . str_replace('.php', '.PHP', __FILE__) . '" ]; then echo "1"; else echo "0"; fi')) === '1'){
 				//--check case sensitive file name on case insenstive FS
 				//-! will this cause problems if code tries creating a file on a case insensitive system that already exists case insensitively?
 				//-! using find for forcing case sensitivity. a bit heavy, but I'm not sure if there is another way.
