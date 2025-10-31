@@ -6,6 +6,7 @@
 	bootstrap="vendor/autoload.php"
 	colors="true"
 	displayDetailsOnTestsThatTriggerWarnings="true"
+	displayDetailsOnTestsThatTriggerDeprecations="true"
 >
 	<testsuites>
 		<testsuite name="Tests">
