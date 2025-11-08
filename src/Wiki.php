@@ -333,7 +333,7 @@ class Wiki{
 	}
 
 	//==shell
-	protected function parseCommandString($command, $name = null, File $item = null){
+	protected function parseCommandString($command, $name = null, ?File $item = null){
 		if($item){
 			$filePath = $this->getFilePath($item);
 			$fileName = pathinfo($filePath, PATHINFO_BASENAME);
@@ -342,7 +342,7 @@ class Wiki{
 		}
 		return $command;
 	}
-	public function run($commandOpts, $name = null, File $item = null, $location = null){
+	public function run($commandOpts, $name = null, ?File $item = null, $location = null){
 		if(is_array($commandOpts)){
 			if(is_array($commandOpts['command'])){
 				foreach($commandOpts['command'] as $key=> $command){
