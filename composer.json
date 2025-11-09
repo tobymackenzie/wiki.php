@@ -16,7 +16,7 @@
 	}
 	,"require": {
 		"php": ">=7.4"
-		,"tjm/shell-runner": "@dev"
+		,"tjm/shell-runner": "^0"
 	}
 	,"require-dev": {
 		"tjm/dev": "*"
