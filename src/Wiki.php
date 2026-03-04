@@ -281,12 +281,6 @@ class Wiki{
 	! doesn't account for folders
 	*/
 	public function getCanonicalPath($name){
-		if($this->hasPage($name) || $this->hasFile($name)){
-			if(substr($name, 0, 1) !== '/'){
-				$name = '/' . $name;
-			}
-			return $name;
-		}
 		if(substr($name, 0, 1) === '/'){
 			$name = substr($name, 1);
 		}

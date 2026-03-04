@@ -329,6 +329,7 @@ class WikiTest extends TestCase{
 		file_put_contents(self::WIKI_DIR . '/foo/bar/bar.md', $content);
 		foreach([
 			'/iNDex'=> '/index',
+			'/index.md'=> '/index.md',
 			'/iNDex.md'=> '/index.md',
 			'/foo/foo'=> '/foo/foo',
 			'foo/foo'=> '/foo/foo',
