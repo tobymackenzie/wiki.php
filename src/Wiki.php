@@ -92,7 +92,7 @@ class Wiki{
 				};
 				$file->setMeta(function($file) use($getParsedFile){
 					$parsedFile = $getParsedFile();
-					$file->setConent($parsedFile->getContent());
+					$file->setContent($parsedFile->getContent());
 					return $parsedFile->getFrontMatter();
 				});
 				$file->setContent(function($file) use($getParsedFile){
