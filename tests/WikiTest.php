@@ -252,6 +252,27 @@ class WikiTest extends TestCase{
 		$resultPages = $wiki->getPagePaths();
 		$this->assertSame(array_diff($pages, $resultPages), array_diff($resultPages, $pages));
 	}
+	public function testGetPagePathsWithBase(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$pages = [
+			'/index',
+			'/about',
+			'/one',
+			'/one/two',
+			'/one/two/three',
+		];
+		foreach($pages as $pagePath){
+			$page = $wiki->getPage($pagePath);
+			$page->setContent($pagePath . ' content');
+			$wiki->writeFile($page);
+		}
+		$pages = [
+			'/two',
+			'/two/three',
+		];
+		$resultPages = $wiki->getPagePaths('one');
+		$this->assertSame(array_diff($pages, $resultPages), array_diff($resultPages, $pages));
+	}
 
 	//--meta
 	public function testGetMeta(){

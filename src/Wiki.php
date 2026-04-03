@@ -186,14 +186,22 @@ class Wiki{
 		}
 		return $basePath . '.' . $this->defaultExtension;
 	}
-	public function getPagePaths(): array{
+	public function getPagePaths(?string $path = null): array{
 		$files = [];
+		if($path){
+			$path = substr($path, 0, 1) === '/'
+				? $this->path . $path
+				: $this->path . '/' . $path
+			;
+		}else{
+			$path = $this->path;
+		}
 		$removeLength = strlen($this->path);
 		$extensionLength = strlen($this->defaultExtension) + 1;
 		foreach(
 			new RegexIterator(
 				new RecursiveIteratorIterator(
-					new RecursiveDirectoryIterator($this->path, FilesystemIterator::SKIP_DOTS)
+					new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
 				),
 				'/.*\.' . $this->defaultExtension . '$/', RegexIterator::GET_MATCH
 			)
