@@ -267,8 +267,8 @@ class WikiTest extends TestCase{
 			$wiki->writeFile($page);
 		}
 		$pages = [
-			'/two',
-			'/two/three',
+			'/one/two',
+			'/one/two/three',
 		];
 		$resultPages = $wiki->getPagePaths('one');
 		$this->assertSame(array_diff($pages, $resultPages), array_diff($resultPages, $pages));
