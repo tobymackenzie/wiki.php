@@ -273,6 +273,69 @@ class WikiTest extends TestCase{
 		$resultPages = $wiki->getPagePaths('one');
 		$this->assertSame(array_diff($pages, $resultPages), array_diff($resultPages, $pages));
 	}
+	public function testGetPagePathsWithFindOpts(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$pages = [
+			'/index',
+			'/about',
+			'/one',
+			'/one/two',
+			'/one/two/three',
+		];
+		foreach($pages as $pagePath){
+			$page = $wiki->getPage($pagePath);
+			$page->setContent($pagePath . ' content');
+			$wiki->writeFile($page);
+		}
+		$expectPages = [
+			'/one/two',
+		];
+		$resultPages = $wiki->getPagePaths(find: '-name "two.md"');
+		$this->assertSame(array_diff($expectPages, $resultPages), array_diff($resultPages, $expectPages));
+	}
+	public function testGetPagePathsWithGrep(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$pages = [
+			'/index',
+			'/about',
+			'/one',
+			'/one/two',
+			'/one/two/three',
+		];
+		foreach($pages as $pagePath){
+			$page = $wiki->getPage($pagePath);
+			$page->setContent($pagePath . ' content');
+			$wiki->writeFile($page);
+		}
+		$expectPages = [
+			'/one/two',
+			'/one/two/three',
+		];
+		$resultPages = $wiki->getPagePaths(grep: 'two');
+		$this->assertSame(array_diff($expectPages, $resultPages), array_diff($resultPages, $expectPages));
+	}
+	public function testGetPagePathsWithSort(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		$pages = [
+			'/index',
+			'/about',
+			'/one',
+			'/one/two',
+			'/one/two/three',
+		];
+		foreach($pages as $pagePath){
+			$page = $wiki->getPage($pagePath);
+			$page->setContent($pagePath . ' content');
+			$wiki->writeFile($page);
+		}
+		$expectPages = [
+			'/one/two',
+			'/one/two/three',
+		];
+		$resultPages = $wiki->getPagePaths(sort: '-r');
+		$this->assertEquals('/one/two/three', $resultPages[0]);
+		$this->assertEquals('/about', end($resultPages));
+	}
 
 	//--meta
 	public function testGetMeta(){

@@ -186,7 +186,7 @@ class Wiki{
 		}
 		return $basePath . '.' . $this->defaultExtension;
 	}
-	public function getPagePaths(?string $path = null): array{
+	public function getPagePaths(?string $path = null, ?string $find = null, $grep = null, ?string $sort = null): array{
 		$files = [];
 		if($path){
 			$path = substr($path, 0, 1) === '/'
@@ -198,18 +198,29 @@ class Wiki{
 		}
 		$removeLength = strlen($this->path);
 		$extensionLength = strlen($this->defaultExtension) + 1;
-		foreach(
-			new RegexIterator(
-				new RecursiveIteratorIterator(
-					new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
-				),
-				'/.*\.' . $this->defaultExtension . '$/', RegexIterator::GET_MATCH
-			)
-		as $file){
-			$file = substr($file[0], $removeLength, -$extensionLength);
-			$files[] = $file;
+		$find = 'find ' . escapeshellarg($path) . ' -type f -name "*.' . $this->defaultExtension . '" ' . $find;
+		if($grep){
+			if(!is_array($grep)){
+				$grep = [$grep];
+			}
+			$first = array_shift($grep);
+			$find .= ' -print0 | xargs -0 grep -il ' . escapeshellarg($first);
+			foreach($grep as $g){
+				$find .= ' | xargs grep -il ' . escapeshellarg($first);
+			}
+		}
+		$find .= " | sort $sort";
+		$results = shell_exec($find);
+		if($results){
+			foreach(explode("\n", $results) as $file){
+				if($file !== ''){
+					$file = substr($file, $removeLength, -$extensionLength);
+					$files[] = $file;
+				}
+			}
 		}
 		return $files;
+
 	}
 
 	//==git
