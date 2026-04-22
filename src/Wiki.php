@@ -236,6 +236,55 @@ class Wiki{
 		return $files;
 
 	}
+	public function getPages(?string $path = null, ?string $find = null, $grep = null, int $sort = Wiki::SORT_ASC | Wiki::SORT_ALPHA, int $limit = 1000): array{
+		//--get matching paths
+		$paths = $this->getPagePaths($path, $find, $grep, $sort);
+		//--build pages
+		$pages = [];
+		$i = 0;
+		foreach($paths as $path){
+			if(++$i > $limit){
+				break;
+			}
+			$page = $this->getPage($path);
+			if($page){
+				$pages[] = $page;
+			}
+		}
+		//--sort
+		if($sort & Wiki::SORT_DATE){
+			$sortMod = $sort & Wiki::SORT_DESC ? -1 : 1;
+			$sortFnc = function($a, $b) use($sortMod){
+				$da = $a->getMeta('date');
+				$db = $b->getMeta('date');
+				if($da && !is_object($da)){
+					$da = new DateTime($da);
+				}
+				if($db && !is_object($db)){
+					$db = new DateTime($db);
+				}
+				if(empty($da)){
+					if(empty($db)){
+						return 0;
+					}
+					return $sortMod * -1;
+				}elseif(empty($db)){
+					return $sortMod * 1;
+				}
+				if($da > $db){
+					return $sortMod * 1;
+				}elseif($da < $db){
+					return $sortMod * -1;
+				}else{
+					return 0;
+				}
+			};
+		}
+		if(isset($sortFnc)){
+			usort($pages, $sortFnc);
+		}
+		return $pages;
+	}
 
 	//==git
 	public function commit($message = null){

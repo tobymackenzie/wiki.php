@@ -6,6 +6,7 @@ use TJM\Wiki\File;
 use TJM\Wiki\Wiki;
 
 class WikiTest extends TestCase{
+	const RESOURCES_DIR = __DIR__ . '/resources';
 	const WIKI_DIR = __DIR__ . '/tmp';
 	const STATUS_COMMAND = '-c color.status=false status --short';
 
@@ -235,6 +236,7 @@ class WikiTest extends TestCase{
 		chdir(self::WIKI_DIR);
 		$this->assertMatchesRegularExpression("/content\(foo\): [\d]{4}-[\d]{2}-[\d]{2} [\d]{2}:[\d]{2}:[\d]{2}/", shell_exec('git log --pretty="%s"'));
 	}
+	//---pagePaths
 	public function testGetPagePaths(){
 		$wiki = new Wiki(self::WIKI_DIR);
 		$pages = [
@@ -335,6 +337,56 @@ class WikiTest extends TestCase{
 		$resultPages = $wiki->getPagePaths(sort: Wiki::SORT_DESC | Wiki::SORT_ALPHA);
 		$this->assertEquals('/one/two/three', $resultPages[0]);
 		$this->assertEquals('/about', end($resultPages));
+	}
+	//---get pages
+	public function testGetPages(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages();
+		$this->assertEquals(4, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('index.md', $pages[0]->getPath());
+	}
+	public function testGetPagesSubPath(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages('/one');
+		$this->assertEquals(1, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('one/subone.md', $pages[0]->getPath());
+	}
+	public function testGetPagesFindOpts(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages(find: '-name "*one.md"');
+		$this->assertEquals(2, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('one.md', $pages[0]->getPath());
+	}
+	public function testGetPagesGrep(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages(grep: 'one');
+		$this->assertEquals(2, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('one.md', $pages[0]->getPath());
+	}
+	public function testGetPagesLimit(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages(limit: 1);
+		$this->assertEquals(1, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('index.md', $pages[0]->getPath());
+	}
+	public function testGetPagesSortDate(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages(sort: Wiki::SORT_DATE);
+		$this->assertEquals(4, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('one/subone.md', $pages[0]->getPath());
+	}
+	public function testGetPagesSortDateDesc(){
+		$wiki = new Wiki(self::RESOURCES_DIR);
+		$pages = $wiki->getPages(sort: Wiki::SORT_DATE | Wiki::SORT_DESC);
+		$this->assertEquals(4, count($pages));
+		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
+		$this->assertEquals('two.md', $pages[0]->getPath());
 	}
 
 	//--meta
