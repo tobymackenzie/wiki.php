@@ -14,6 +14,10 @@ use TJM\ShellRunner\ShellRunner;
 
 class Wiki{
 	const STAGE_ALL = '*';
+	const SORT_ASC = 1;
+	const SORT_DESC = 2;
+	const SORT_ALPHA = 4;
+	const SORT_DATE = 8;
 	protected $defaultExtension = 'md';
 	protected FrontMatterParser $frontMatterParser;
 	protected $fileSystemCaseInsensitvity;
@@ -186,7 +190,7 @@ class Wiki{
 		}
 		return $basePath . '.' . $this->defaultExtension;
 	}
-	public function getPagePaths(?string $path = null, ?string $find = null, $grep = null, ?string $sort = null): array{
+	public function getPagePaths(?string $path = null, ?string $find = null, $grep = null, $sort = Wiki::SORT_ASC | Wiki::SORT_ALPHA): array{
 		$files = [];
 		if($path){
 			$path = substr($path, 0, 1) === '/'
@@ -209,7 +213,17 @@ class Wiki{
 				$find .= ' | xargs grep -il ' . escapeshellarg($first);
 			}
 		}
-		$find .= " | sort $sort";
+		if($sort){
+			if(is_integer($sort)){
+				$sortStr = '';
+				if($sort & Wiki::SORT_DESC){
+					$sortStr .= ' -r';
+				}
+			}else{
+				$sortStr = $sort;
+			}
+			$find .= " | sort $sortStr";
+		}
 		$results = shell_exec($find);
 		if($results){
 			foreach(explode("\n", $results) as $file){

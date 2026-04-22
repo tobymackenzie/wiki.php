@@ -332,7 +332,7 @@ class WikiTest extends TestCase{
 			'/one/two',
 			'/one/two/three',
 		];
-		$resultPages = $wiki->getPagePaths(sort: '-r');
+		$resultPages = $wiki->getPagePaths(sort: Wiki::SORT_DESC | Wiki::SORT_ALPHA);
 		$this->assertEquals('/one/two/three', $resultPages[0]);
 		$this->assertEquals('/about', end($resultPages));
 	}
