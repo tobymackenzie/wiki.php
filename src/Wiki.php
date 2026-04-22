@@ -258,9 +258,15 @@ class Wiki{
 				$da = $a->getMeta('date');
 				$db = $b->getMeta('date');
 				if($da && !is_object($da)){
+					if(is_int($da)){
+						$da = '@' . $da;
+					}
 					$da = new DateTime($da);
 				}
 				if($db && !is_object($db)){
+					if(is_int($db)){
+						$db = '@' . $db;
+					}
 					$db = new DateTime($db);
 				}
 				if(empty($da)){
