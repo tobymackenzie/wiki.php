@@ -122,6 +122,12 @@ class Wiki{
 		}
 		return dirname($path);
 	}
+	public function hasDir($name){
+		$filePath = $this->getFilePath($name);
+		//--make sure path is in repo via side effect
+		$this->getRelativeFilePath($filePath);
+		return is_dir($filePath);
+	}
 	public function hasFile($name){
 		$filePath = $this->getFilePath($name);
 		//--make sure path is in repo via side effect
