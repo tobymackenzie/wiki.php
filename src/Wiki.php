@@ -45,6 +45,9 @@ class Wiki{
 			throw new Exception('Must set path value for ' . self::class . ' instance');
 		}
 	}
+	public function getPath(){
+		return $this->path;
+	}
 
 	//==files
 	public function commitFile(File $file, $message = null){
