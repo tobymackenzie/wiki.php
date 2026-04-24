@@ -332,7 +332,7 @@ class Wiki{
 		}else{
 			$name = $fileOrName;
 		}
-		$path = $this->path . ($name === '/' ? $name : '/' . $name);
+		$path = $this->path . (substr($name, 0, 1) === '/' ? $name : '/' . $name);
 		if($this->isWikiPathSafe($path)){
 			return $path;
 		}else{
