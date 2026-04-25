@@ -13,6 +13,9 @@ use Symfony\Component\Yaml\Yaml;
 use TJM\ShellRunner\ShellRunner;
 
 class Wiki{
+	const LIST_FILENAME = 1;
+	const LIST_WIKIPATH= 2;
+	const LIST_PATH= 3;
 	const STAGE_ALL = '*';
 	const SORT_ASC = 1;
 	const SORT_DESC = 2;
@@ -127,6 +130,25 @@ class Wiki{
 		//--make sure path is in repo via side effect
 		$this->getRelativeFilePath($filePath);
 		return is_dir($filePath);
+	}
+	public function listDir(string $path = '/', int $depth = Wiki::LIST_FILENAME, string $glob = '*'){
+		$path = $this->getFilePath($path);
+		if(substr($path, -1, 1) !== '/'){
+			$path .= '/';
+		}
+		//--make sure path is in repo via side effect
+		$this->getRelativeFilePath($path);
+		$files = [];
+		$removeLength = strlen($this->path);
+		foreach(glob($path . $glob) as $file){
+			if($depth === self::LIST_WIKIPATH){
+				$file = substr($file, $removeLength);
+			}elseif($depth === self::LIST_FILENAME){
+				$file = pathinfo($file, PATHINFO_FILENAME);
+			}
+			$files[] = $file;
+		}
+		return $files;
 	}
 	public function hasFile($name){
 		$filePath = $this->getFilePath($name);
