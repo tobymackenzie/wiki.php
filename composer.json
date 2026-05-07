@@ -14,6 +14,11 @@
 			"TJM\\Wiki\\": "src"
 		}
 	}
+	,"autoload-dev": {
+		"psr-4": {
+			"TJM\\Wiki\\Tests\\": "tests"
+		}
+	}
 	,"require": {
 		"php": ">=7.4"
 		,"tjm/shell-runner": "^0"
@@ -21,6 +26,10 @@
 	,"require-dev": {
 		"tjm/dev": "*"
 		,"league/commonmark": "^2"
+		,"symfony/event-dispatcher": "^5.4||^6.4"
 		,"symfony/yaml": "^5.4||^6.4"
+	}
+	,"recommend": {
+		"symfony/event-dispatcher": "^5.4||^6.4"
 	}
 }

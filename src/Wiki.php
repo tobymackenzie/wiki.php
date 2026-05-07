@@ -9,8 +9,15 @@ use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use TJM\ShellRunner\ShellRunner;
+use TJM\Wiki\Event\CommittedEvent;
+use TJM\Wiki\Event\GetPageFilePathEvent;
+use TJM\Wiki\Event\StagedEvent;
+use TJM\Wiki\Event\RemovedFileEvent;
+use TJM\Wiki\Event\WroteFileEvent;
 
 class Wiki{
 	const LIST_FILENAME = 1;
@@ -22,6 +29,7 @@ class Wiki{
 	const SORT_ALPHA = 4;
 	const SORT_DATE = 8;
 	protected $defaultExtension = 'md';
+	protected ?EventDispatcherInterface $eventDispatcher = null;
 	protected FrontMatterParser $frontMatterParser;
 	protected $fileSystemCaseInsensitvity;
 	protected $mediaDir = '_media';
@@ -171,7 +179,10 @@ class Wiki{
 	}
 	public function removeFile(File $file){
 		if($this->hasFile($file)){
-			return unlink($this->getFilePath($file));
+			if(unlink($this->getFilePath($file))){
+				$this->dispatch(new RemovedFileEvent($file));
+				return true;
+			}
 		}
 		return false;
 	}
@@ -189,7 +200,10 @@ class Wiki{
 			$content = "---\n" . Yaml::dump($file->getMeta()) . "---\n\n" . $content;
 		}
 		if(!$this->fileExists($path) || file_get_contents($path) !== $content){
-			return (bool) file_put_contents($path, $content);
+			if((bool) file_put_contents($path, $content)){
+				$this->dispatch(new WroteFileEvent($file, $path, $content));
+				return true;
+			}
 		}
 		return false;
 	}
@@ -203,6 +217,12 @@ class Wiki{
 		return $this->fileExists($this->getPageFilePath($name));
 	}
 	public function getPageFilePath($name){
+		$event = new GetPageFilePathEvent($name);
+		$this->dispatch($event);
+		if($event->isDone()){
+			return $event->getPath();
+		}
+		$name = $event->getName();
 		$basePath = $this->getFilePath($name);
 		$path = $basePath . '.' . $this->defaultExtension;
 		if($this->fileExists($path)){
@@ -328,19 +348,26 @@ class Wiki{
 		if(empty($message)){
 			$message = 'content: ' . (new DateTime())->format('Y-m-d H:i:s');
 		}
-		return $this->runGit("commit -m " . escapeshellarg($message));
+		$result = $this->runGit("commit -m " . escapeshellarg($message));
+		$this->dispatch(new CommittedEvent($message));
+		return $result;
 	}
 	public function stage($files){
 		$args = [];
 		$opts = [];
-		foreach(is_array($files) ? $files : [$files] as $file){
+		if(!is_array($files)){
+			$files = [$files];
+		}
+		foreach($files as $file){
 			if($file === static::STAGE_ALL){
 				$opts[] = '--all';
 			}else{
 				$args[] = escapeshellarg($this->getFilePath($file));
 			}
 		}
-		return $this->runGit("add " . implode(' ', $opts) . ' ' . implode(' ', $args));
+		$result = $this->runGit("add " . implode(' ', $opts) . ' ' . implode(' ', $args));
+		$this->dispatch(new StagedEvent($files));
+		return $result;
 	}
 
 	//==paths
@@ -488,5 +515,33 @@ class Wiki{
 			$this->shell = new ShellRunner();
 		}
 		return $this->shell->run($command, $path);
+	}
+
+	/*=====
+	==events
+	=====*/
+	public function dispatch(object $event, ?string $name = null): object{
+		if($this->eventDispatcher){
+			return $this->eventDispatcher->dispatch($event, $name);
+		}
+		return $event;
+	}
+	public function getEventDispatcher(){
+		return $this->eventDispatcher;
+	}
+	public function hasEventDispatcher(){
+		return isset($this->eventDispatcher);
+	}
+	//-# currently plugins are just subscribers (see [subscriber docs](https://symfony.com/doc/6.4/components/event_dispatcher.html#using-event-subscribers))
+	public function addPlugin(PluginInterface $plugin){
+		$plugin->setWiki($this);
+		$this->addSubscriber($plugin);
+	}
+	public function addSubscriber(EventSubscriberInterface $subscriber): void{
+		if($this->eventDispatcher){
+			$this->getEventDispatcher()->addSubscriber($subscriber);
+		}else{
+			throw new Exception("TJM Wiki: Trying to subscribe to events, but no eventDispatcher defined");
+		}
 	}
 }

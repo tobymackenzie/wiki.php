@@ -342,7 +342,7 @@ class WikiTest extends TestCase{
 	public function testGetPages(){
 		$wiki = new Wiki(self::RESOURCES_DIR);
 		$pages = $wiki->getPages();
-		$this->assertEquals(4, count($pages));
+		$this->assertEquals(6, count($pages));
 		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
 		$this->assertEquals('index.md', $pages[0]->getPath());
 	}
@@ -377,14 +377,14 @@ class WikiTest extends TestCase{
 	public function testGetPagesSortDate(){
 		$wiki = new Wiki(self::RESOURCES_DIR);
 		$pages = $wiki->getPages(sort: Wiki::SORT_DATE);
-		$this->assertEquals(4, count($pages));
+		$this->assertEquals(6, count($pages));
 		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
-		$this->assertEquals('one/subone.md', $pages[0]->getPath());
+		$this->assertEquals('new/a.md', $pages[0]->getPath());
 	}
 	public function testGetPagesSortDateDesc(){
 		$wiki = new Wiki(self::RESOURCES_DIR);
 		$pages = $wiki->getPages(sort: Wiki::SORT_DATE | Wiki::SORT_DESC);
-		$this->assertEquals(4, count($pages));
+		$this->assertEquals(6, count($pages));
 		$this->assertInstanceOf('TJM\\Wiki\\File', $pages[0]);
 		$this->assertEquals('two.md', $pages[0]->getPath());
 	}
