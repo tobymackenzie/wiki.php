@@ -540,8 +540,6 @@ class Wiki{
 	public function addSubscriber(EventSubscriberInterface $subscriber): void{
 		if($this->eventDispatcher){
 			$this->getEventDispatcher()->addSubscriber($subscriber);
-		}else{
-			throw new Exception("TJM Wiki: Trying to subscribe to events, but no eventDispatcher defined");
 		}
 	}
 }
