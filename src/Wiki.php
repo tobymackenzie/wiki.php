@@ -18,6 +18,7 @@ use TJM\Wiki\Event\GetPageFilePathEvent;
 use TJM\Wiki\Event\StagedEvent;
 use TJM\Wiki\Event\RemovedFileEvent;
 use TJM\Wiki\Event\WroteFileEvent;
+use TJM\Wiki\Exception\InvalidPathException;
 
 class Wiki{
 	const LIST_FILENAME = 1;
@@ -385,7 +386,7 @@ class Wiki{
 		if($this->isWikiPathSafe($path)){
 			return $path;
 		}else{
-			throw new Exception("getFilePath: {$fileOrName} path not inside wiki path");
+			throw new InvalidPathException("getFilePath: {$fileOrName} path not inside wiki path");
 		}
 	}
 	protected function getRealPath($path){

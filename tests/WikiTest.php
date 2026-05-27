@@ -2,6 +2,7 @@
 namespace TJM\Wiki\Tests;
 use Exception;
 use PHPUnit\Framework\TestCase;
+use TJM\Wiki\Exception\InvalidPathException;
 use TJM\Wiki\File;
 use TJM\Wiki\Wiki;
 
@@ -178,6 +179,19 @@ class WikiTest extends TestCase{
 			$this->assertTrue($wiki->writeFile($file));
 			$this->assertTrue(file_exists(self::WIKI_DIR . '/' . $name));
 			$this->assertEquals($content, file_get_contents(self::WIKI_DIR . '/' . $name));
+		}
+	}
+	public function testGetInvalidFilePath(){
+		$wiki = new Wiki(self::WIKI_DIR);
+		file_put_contents(self::WIKI_DIR . '/index.md', 'Lorem ipsum');
+		file_put_contents(self::WIKI_DIR . '/foo.md', 'asdf');
+		foreach([
+			'../foo',
+			'//../../../etc/pswd.txt',
+		] as $path){
+			$this->assertException(InvalidPathException::class, function() use($path, $wiki){
+				$wiki->getFilePath($path);
+			}, "Expected InvalidPathException when getting path outside of wiki dir.");
 		}
 	}
 
