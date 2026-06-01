@@ -540,6 +540,14 @@ class Wiki{
 	}
 	public function addSubscriber(EventSubscriberInterface $subscriber): void{
 		if($this->eventDispatcher){
+			//--make sure we aren't already subscribed (can happen with autoconfig)
+			foreach($subscriber->getSubscribedEvents() as $name=> $value){
+				foreach($this->getEventDispatcher()->getListeners($name) as $listener){
+					if(is_array($listener) && $listener[0] === $subscriber){
+						return;
+					}
+				}
+			}
 			$this->getEventDispatcher()->addSubscriber($subscriber);
 		}
 	}
