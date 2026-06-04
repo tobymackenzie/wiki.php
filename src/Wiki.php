@@ -511,7 +511,7 @@ class Wiki{
 		}
 		return $this->runShell($opts, $this->path);
 	}
-	protected function runShell($command, $path = null){
+	public function runShell($command, $path = null){
 		if(empty($this->shell)){
 			$this->shell = new ShellRunner();
 		}
