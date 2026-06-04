@@ -61,6 +61,15 @@ class File{
 			$this->meta[$a] = $b;
 		}
 	}
+	public function setMetaIfUnset($a, $b = null){
+		if(is_array($a)){
+			foreach($a as $key=> $value){
+				$this->setMetaIfUnset($key, $value);
+			}
+		}elseif(!isset($this->meta[$a])){
+			$this->meta[$a] = $b;
+		}
+	}
 	public function getPath(){
 		return $this->path;
 	}
