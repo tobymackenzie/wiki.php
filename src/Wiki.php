@@ -34,6 +34,7 @@ class Wiki{
 	protected FrontMatterParser $frontMatterParser;
 	protected $fileSystemCaseInsensitvity;
 	protected $mediaDir = '_media';
+	protected int $metaInlineDepth = 1;
 	protected $path;
 	protected $shell;
 
@@ -198,7 +199,7 @@ class Wiki{
 		}
 		$content = $file->getContent();
 		if($file->isMarkdown() && $file->getMeta()){
-			$content = "---\n" . Yaml::dump($file->getMeta()) . "---\n\n" . $content;
+			$content = "---\n" . Yaml::dump($file->getMeta(), $this->metaInlineDepth) . "---\n\n" . $content;
 		}
 		if(!$this->fileExists($path) || file_get_contents($path) !== $content){
 			if((bool) file_put_contents($path, $content)){
