@@ -36,6 +36,7 @@ class Wiki{
 	protected $mediaDir = '_media';
 	protected int $metaInlineDepth = 1;
 	protected $path;
+	protected ?string $gitPath = null;
 	protected $shell;
 
 	public function __construct($opts = []){
@@ -56,6 +57,17 @@ class Wiki{
 		}
 		if(empty($this->path)){
 			throw new Exception('Must set path value for ' . self::class . ' instance');
+		}
+	}
+	protected function getGitPath(){
+		if(!empty($this->gitPath)){
+			if(substr($this->gitPath, 0, 1) === '/'){
+				return $this->getPath();
+			}else{
+				return $this->path . '/' . $this->gitPath;
+			}
+		}else{
+			return $this->path;
 		}
 	}
 	public function getPath(){
@@ -499,8 +511,8 @@ class Wiki{
 		return $this->runShell($commandOpts, $location);
 	}
 	public function runGit($command, $opts = []){
-		if(!is_dir($this->path . '/.git')){
-			$this->runShell('git init 2> /dev/null', $this->path);
+		if(!is_dir($this->getGitPath() . '/.git')){
+			$this->runShell('git init 2> /dev/null', $this->getGitPath());
 		}
 		if(is_string($command)){
 			$opts['command'] = 'git ' . $command;
@@ -510,7 +522,7 @@ class Wiki{
 			}
 			$opts['command'] = $command;
 		}
-		return $this->runShell($opts, $this->path);
+		return $this->runShell($opts, $this->getGitPath());
 	}
 	public function runShell($command, $path = null){
 		if(empty($this->shell)){
