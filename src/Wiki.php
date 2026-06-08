@@ -62,7 +62,7 @@ class Wiki{
 	protected function getGitPath(){
 		if(!empty($this->gitPath)){
 			if(substr($this->gitPath, 0, 1) === '/'){
-				return $this->getPath();
+				return $this->gitPath;
 			}else{
 				return $this->path . '/' . $this->gitPath;
 			}
