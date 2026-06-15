@@ -267,7 +267,7 @@ class Wiki{
 		}
 		$removeLength = strlen($this->path);
 		$extensionLength = strlen($this->defaultExtension) + 1;
-		$find = 'find ' . escapeshellarg($path) . ' -type f -name "*.' . $this->defaultExtension . '" ' . $find;
+		$find = 'find ' . escapeshellarg($path) . ' ' . $find . ' -type f -name "*.' . $this->defaultExtension . '"';
 		if($grep){
 			if(!is_array($grep)){
 				$grep = [$grep];
