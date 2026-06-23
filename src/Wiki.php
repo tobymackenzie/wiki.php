@@ -38,6 +38,8 @@ class Wiki{
 	protected $path;
 	protected ?string $gitPath = null;
 	protected $shell;
+	//--cache
+	protected array $fileCache = [];
 
 	public function __construct($opts = []){
 		if($opts){
@@ -112,6 +114,9 @@ class Wiki{
 	}
 	public function getFile($name){
 		$filePath = $this->getFilePath($name);
+		if(isset($this->fileCache[$filePath])){
+			return $this->fileCache[$filePath];
+		}
 		$file = new File($this->getRelativeFilePath($filePath));
 		if($this->fileExists($filePath)){
 			if(class_exists(FrontMatterParser::class) && $file->isMarkdown()){
@@ -138,6 +143,7 @@ class Wiki{
 				});
 			}
 		}
+		$this->fileCache[$filePath] = $file;
 		return $file;
 	}
 	public function getFileDir($name){
