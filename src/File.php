@@ -9,6 +9,8 @@ class File{
 	protected $meta = [];
 	//--$path: relative path within wiki
 	protected $path;
+	//--$etc: extra data for use by plugins, etc
+	protected $etc = [];
 
 	public function __construct($opts = []){
 		if($opts){
@@ -36,6 +38,12 @@ class File{
 	}
 	public function setContent($content){
 		$this->content = $content;
+	}
+	public function getEtc(string $key){
+		return $this->etc[$key] ?? null;
+	}
+	public function setEtc(string $key, $val){
+		$this->etc[$key] = $val;
 	}
 	public function getExtension(){
 		return pathinfo($this->getPath(), PATHINFO_EXTENSION);
